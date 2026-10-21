@@ -5,7 +5,8 @@ function run(command,args){const result=spawnSync(command,args,{cwd:root,encodin
 function releaseAssets(){
  const yaml=require('js-yaml'),dir=path.join(root,'release'),meta=yaml.load(fs.readFileSync(path.join(dir,'latest.yml'),'utf8'));
  if(meta.version!==pkg.version)throw Error('latest.yml 与当前应用版本不一致，请重新构建');
- const installer='Facet-Setup-'+pkg.version+'-x64.exe',file=path.join(dir,installer),row=meta.files.find(x=>x.url===installer);
+ const installer=(meta.files.map(item=>item.url).find(url=>url.endsWith('.exe'))||''),file=path.join(dir,installer),row=meta.files.find(x=>x.url===installer);
+ if(!installer)throw Error('latest.yml 中没有安装包记录，请重新构建');
  if(!row||crypto.createHash('sha512').update(fs.readFileSync(file)).digest('base64')!==row.sha512)throw Error('安装包与更新清单校验值不一致');
  const assets=[file,file+'.blockmap',path.join(dir,'latest.yml'),file+'.sha256'];for(const asset of assets)if(!fs.existsSync(asset))throw Error('缺少发布文件：'+path.basename(asset));return assets;
 }

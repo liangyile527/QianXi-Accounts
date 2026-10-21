@@ -1,6 +1,6 @@
 # 千禧accounts：项目总览与维护手册
 
-更新：2026-10-20。适用版本 v0.2.17。项目以用户隐私保护与内置 AI 助手为核心；本版补充扩展 ZIP 导入，修复 DNR 执行、网页复制、备注拖选和环境重置。待开发能力见 [交付状态](UX-DELIVERY-STATUS.md)，文档导航见 [索引](README.md)。
+更新：2026-10-20。适用版本 v0.01。项目以用户隐私保护与内置 AI 助手为核心；本版补充扩展 ZIP 导入，修复 DNR 执行、网页复制、备注拖选和环境重置。待开发能力见 [交付状态](UX-DELIVERY-STATUS.md)，文档导航见 [索引](README.md)。
 
 当前支持范围以 [CURRENT-SCOPE.md](CURRENT-SCOPE.md) 为准；旧 `SCOPE.md` 是历史。
 

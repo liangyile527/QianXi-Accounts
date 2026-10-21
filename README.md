@@ -8,7 +8,7 @@
 
 > AI 或自动化工具接手本项目时，请先阅读根目录 [`AGENTS.md`](AGENTS.md)，再阅读 [`docs/AI-CONTROL-HANDOFF.md`](docs/AI-CONTROL-HANDOFF.md)。
 
-本版变更见 [v0.2.17 更新说明](docs/releases/v0.2.17.md)。扩展支持范围与兼容边界见 [扩展兼容层](docs/EXTENSION-COMPATIBILITY.md)，不代表所有 Chrome 插件完整兼容。环境随机方案与组合规则见 [指纹候选库](docs/FINGERPRINT-CATALOG.md)。
+本版变更见 [v0.01 更新说明](docs/releases/v0.01.md)。扩展支持范围与兼容边界见 [扩展兼容层](docs/EXTENSION-COMPATIBILITY.md)，不代表所有 Chrome 插件完整兼容。环境随机方案与组合规则见 [指纹候选库](docs/FINGERPRINT-CATALOG.md)。
 
 如果千禧accounts对你有帮助，欢迎点一下 **Star**，帮助更多人发现这个项目。
 
@@ -45,8 +45,8 @@
 
 ## 下载安装
 
-1. 打开 [最新版发布页](https://github.com/HEYD66/facet/releases/latest)。
-2. 下载 `Facet-Setup-<版本>-x64.exe`，运行安装向导。
+1. 打开 [最新版发布页](https://github.com/momoqiqi-qwq/QianXi-Accounts/releases/latest)。
+2. 下载 `QianXi-Accounts-Setup-<版本>-x64.exe`，运行安装向导。
 3. 安装后启动「千禧accounts」，点击「启动当前实例」开始使用。
 
 安装包自带 Electron、Mihomo 和进程保护组件，**无需安装 Node.js**。新安装默认使用 `D:\Facet`，无可访问 D 盘时使用 `C:\Facet`。选择盘符或父文件夹后会自动补上 `Facet` 子目录，安装时创建文件夹；升级保留原安装路径。支持创建桌面与开始菜单快捷方式。
