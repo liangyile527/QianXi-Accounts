@@ -100,12 +100,15 @@ async function main(){
  if(built&&fs.existsSync(built)&&fs.statSync(built).size!==size)throw Error('已安装可执行文件大小与构建产物不一致：'+executable);
  say('已安装：'+executable+'（'+size+' 字节，'+fs.statSync(executable).mtime.toLocaleString()+'）');
  if(!launch)return say('按要求未启动新版本');
- const child=spawn(executable,[],{detached:true,stdio:'ignore',windowsHide:false});
+ // 自动化外壳常把 ELECTRON_RUN_AS_NODE 带进子进程；带着它启动只会得到一个立刻退出的
+ // Node 进程（还会把 --user-data-dir 之类当成 bad option），必须先清掉。
+ const env={...process.env};
+ delete env.ELECTRON_RUN_AS_NODE;
+ delete env.ELECTRON_NO_ATTACH_CONSOLE;
+ const child=spawn(executable,[],{detached:true,stdio:'ignore',windowsHide:false,env});
  child.unref();
- await sleep(1500);
- const alive=runningAppProcesses().length>0;
- say((alive?'已启动新版本：':'已请求启动新版本（进程尚未出现）：')+executable);
- if(!alive)process.exitCode=1;
+ for(let i=0;i<24;i++){if(runningAppProcesses().length)return say('已启动新版本：'+executable);await sleep(250);}
+ throw Error('启动后没有检测到应用进程：'+executable);
 }
 if(require.main===module)main().catch(error=>{console.error('安装失败：'+error.message);process.exitCode=1;});
 module.exports={installerPath,installLocation,closeRunningApp};

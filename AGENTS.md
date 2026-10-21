@@ -31,7 +31,7 @@ npm.cmd run install:latest    # 关闭旧进程 → 静默安装 → 校验 → 
 1. 从 `release/build-manifest.json`（缺省回退到最新的 `release/QianXi-Accounts-Setup-*.exe`）定位安装包，并用同目录 `.sha256` 校验，不一致直接失败。
 2. **前台/后台只要还有应用进程，先关闭它们**：`QianXiAccounts.exe`（含 `千禧accounts` 同名进程）逐个 `taskkill /F`，并轮询确认已退出。安装器自带 `customCheckAppRunning` 拒绝覆盖运行中的实例（退出码 2），所以这一步必须先做，不能靠安装器自己处理。
 3. 用安装器 `/S` 静默安装到现有安装目录（从 `HKCU\Software\2541b14a-9d68-53e3-866a-2bb1b96bd5e6` 的 `InstallLocation` 解析，回退卸载项目录 / `D:\QianXiAccounts` / `C:\QianXiAccounts`），保留原有实例与登录数据。
-4. 校验已安装的 `QianXiAccounts.exe` 存在、大小与构建产物一致，然后以 detached 方式启动，并确认进程真的起来了（起不来算失败）。
+4. 校验已安装的 `QianXiAccounts.exe` 存在、大小与构建产物一致，然后以 detached 方式启动，并确认进程真的起来了（起不来算失败）。启动前必须从子进程环境里删掉 `ELECTRON_RUN_AS_NODE`（自动化外壳常把它带进来），否则 exe 会当成 Node 跑、立刻退出且没有任何输出，`--user-data-dir` 之类的开关还会被报成 `bad option`。
 5. 安装完必须回报：安装包路径与 SHA256、被关闭的进程、最终安装路径、是否成功启动。任何一步失败都如实报告，不要用「界面提示成功」代替进程与文件状态验证。
 
 只改界面代码不需要重装时，允许 `npm.cmd run install:latest -- --dry-run` 先看流程；真正交付给用户的新版本必须走完整流程。
