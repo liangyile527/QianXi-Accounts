@@ -1,6 +1,6 @@
 {
   "name": "qianxi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Privacy-focused multi-instance browser with a built-in AI assistant, isolated sessions and per-instance proxies",
   "author": "HEYD66",
@@ -9,6 +9,8 @@
   "main": "src/main/main.cjs",
   "scripts": {
     "build:installer": "node scripts/build-installer.cjs",
+    "install:latest": "node scripts/install-latest.cjs",
+    "release:local": "node scripts/build-installer.cjs && node scripts/install-latest.cjs",
     "test:packaging": "node --test tests/packaging.test.cjs",
     "test:diagnostics": "node --test tests/diagnostic-bundle.test.cjs tests/detailed-diagnostics.test.cjs tests/network-capture.test.cjs",
     "test:network-capture": "node --test tests/network-capture.test.cjs",

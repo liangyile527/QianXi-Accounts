@@ -16,6 +16,27 @@
 - 代码修改后至少运行 `npm.cmd run check`、`npm.cmd run test:control-api` 和 `git diff --check`；未通过时不得声称完成。
 - 文件选择和原生确认框的自动化边界，以接手说明中的限制为准。
 
+## 生成 exe 后的收尾（强制）
+
+每次产出新 exe（安装包或免安装版本）后，必须**当场把新版本装上并开机打开**，不能只把 `release/` 里的文件丢在那里等人手动点。做法固定为一条命令：
+
+```powershell
+npm.cmd run build:installer   # 产出 release/QianXi-Accounts-Setup-<版本>-x64.exe
+npm.cmd run install:latest    # 关闭旧进程 → 静默安装 → 校验 → 启动新版本
+# 或者一步到位：npm.cmd run release:local
+```
+
+`scripts/install-latest.cjs` 按顺序做这些事，不要绕过它手写临时步骤：
+
+1. 从 `release/build-manifest.json`（缺省回退到最新的 `release/QianXi-Accounts-Setup-*.exe`）定位安装包，并用同目录 `.sha256` 校验，不一致直接失败。
+2. **前台/后台只要还有应用进程，先关闭它们**：`QianXiAccounts.exe`（含 `千禧accounts` 同名进程）逐个 `taskkill /F`，并轮询确认已退出。安装器自带 `customCheckAppRunning` 拒绝覆盖运行中的实例（退出码 2），所以这一步必须先做，不能靠安装器自己处理。
+3. 用安装器 `/S` 静默安装到现有安装目录（从 `HKCU\Software\2541b14a-9d68-53e3-866a-2bb1b96bd5e6` 的 `InstallLocation` 解析，回退卸载项目录 / `D:\QianXiAccounts` / `C:\QianXiAccounts`），保留原有实例与登录数据。
+4. 校验已安装的 `QianXiAccounts.exe` 存在、大小与构建产物一致，然后以 detached 方式启动，并确认进程真的起来了（起不来算失败）。
+5. 安装完必须回报：安装包路径与 SHA256、被关闭的进程、最终安装路径、是否成功启动。任何一步失败都如实报告，不要用「界面提示成功」代替进程与文件状态验证。
+
+只改界面代码不需要重装时，允许 `npm.cmd run install:latest -- --dry-run` 先看流程；真正交付给用户的新版本必须走完整流程。
+
+
 ## 项目入口
 
 - 主进程：`src/main/main.cjs`
