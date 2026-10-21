@@ -82,7 +82,59 @@ function runInstaller(file){
   });
  });
 }
-async function main(){
+// 桌面 / 开始菜单 / 任务栏固定，三处的 .lnk 必须指向当前安装目录里的 exe。
+// 安装目录和 exe 名固定不变时它们本来就一直有效；这里额外兜住「曾经装到别的目录、
+// 或者快捷方式是旧副本」的情况，安装完当场把目标改对，缺了就补一个。
+function repairShortcuts(executable){
+ // 路径用 base64 传给 PowerShell：绕开命令行里反斜杠/中文的转义问题，
+ // 之前用 JSON.stringify 拼字符串会把 E:\a\b 变成 E:\\a\\b，比较永远不等，
+ // 结果把已经正确的快捷方式又"改指"一遍。
+ const exe64=Buffer.from(executable,'utf8').toString('base64');
+ const ps=[
+  "$ErrorActionPreference='Stop';",
+  "$exe=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+exe64+"'));",
+  "if(-not (Test-Path -LiteralPath $exe)){throw ('安装的可执行文件不存在：'+$exe)}",
+  "$exeFull=[IO.Path]::GetFullPath($exe);",
+  "$name='千禧accounts';",
+  "$taskbar=Join-Path $env:APPDATA 'Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar';",
+  "$desktop=[Environment]::GetFolderPath('Desktop');",
+  "$startMenu=Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs';",
+  "$commonMenu=Join-Path $env:ProgramData 'Microsoft\\Windows\\Start Menu\\Programs';",
+  "$commonDesktop=[Environment]::GetFolderPath('CommonDesktopDirectory');",
+  "$dirs=@($desktop,$commonDesktop,$startMenu,$commonMenu,$taskbar);",
+  "$shell=New-Object -ComObject WScript.Shell;",
+  "$fixed=@();$created=@();$checked=0;$pinned=$null;",
+  "foreach($dir in $dirs){",
+  "  if(-not (Test-Path -LiteralPath $dir)){continue}",
+  "  foreach($file in (Get-ChildItem -LiteralPath $dir -Filter *.lnk -Recurse -ErrorAction SilentlyContinue)){",
+  "    $link=$shell.CreateShortcut($file.FullName);",
+  "    $target=if($link.TargetPath){$link.TargetPath}else{''};",
+  "    $isApp=($target -match 'QianXiAccounts\\.exe$') -or ($file.BaseName -like ($name+'*'));",
+  "    if(-not $isApp){continue}",
+  "    $checked++;",
+  "    if($dir -eq $taskbar){$pinned=$file.FullName}",
+  "    $same=$false;",
+  "    if($target){try{$same=([IO.Path]::GetFullPath($target) -eq $exeFull)}catch{$same=$false}}",
+  "    $icon=$exeFull+',0';",
+  "    if(-not $same -or ($link.IconLocation -ne $icon)){",
+  "      $link.TargetPath=$exeFull;$link.WorkingDirectory=(Split-Path -Parent $exeFull);$link.IconLocation=$icon;$link.Save();$fixed+=$file.FullName;",
+  "    }",
+  "  }",
+  "}",
+  "foreach($dir in @($desktop,$startMenu)){",
+  "  $file=Join-Path $dir ($name+'.lnk');",
+  "  if(Test-Path -LiteralPath $file){continue}",
+  "  $link=$shell.CreateShortcut($file);$link.TargetPath=$exeFull;$link.WorkingDirectory=(Split-Path -Parent $exeFull);$link.IconLocation=$exeFull+',0';$link.Description=$name;$link.Save();$created+=$file;",
+  "}",
+  "$pinnedFile=Join-Path $taskbar ($name+'.lnk');",
+  "if(-not (Test-Path -LiteralPath $pinnedFile)){",
+  "  $link=$shell.CreateShortcut($pinnedFile);$link.TargetPath=$exeFull;$link.WorkingDirectory=(Split-Path -Parent $exeFull);$link.IconLocation=$exeFull+',0';$link.Description=$name;$link.Save();$created+=$pinnedFile;",
+  "}",
+  "[pscustomobject]@{checked=$checked;fixed=$fixed;created=$created;pinned=$pinnedFile;target=$exeFull}|ConvertTo-Json -Depth 4 -Compress"
+ ].join(' ');
+ const out=execFileSync('powershell',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-EncodedCommand',Buffer.from(ps,'utf16le').toString('base64')],{encoding:'utf8',windowsHide:true});
+ return JSON.parse(String(out||'{}').trim()||'{}');
+}async function main(){
  const installer=installerPath();
  const sha=verifyInstaller(installer);
  say('安装包：'+installer);
@@ -99,6 +151,12 @@ async function main(){
  const size=fs.statSync(executable).size;
  if(built&&fs.existsSync(built)&&fs.statSync(built).size!==size)throw Error('已安装可执行文件大小与构建产物不一致：'+executable);
  say('已安装：'+executable+'（'+size+' 字节，'+fs.statSync(executable).mtime.toLocaleString()+'）');
+ const shortcuts=repairShortcuts(executable);
+ const fixedList=shortcuts.fixed||[],createdList=shortcuts.created||[];
+ say('快捷方式：检查 '+Number(shortcuts.checked||0)+' 个，改指 '+fixedList.length+' 个'+(createdList.length?('，新建 '+createdList.length+' 个'):'')+' → '+executable);
+ for(const item of fixedList)say('  改指：'+item);
+ for(const item of createdList)say('  新建：'+item);
+ if(shortcuts.pinned&&!fs.existsSync(shortcuts.pinned))throw Error('任务栏快捷方式目标丢失：'+shortcuts.pinned);
  if(!launch)return say('按要求未启动新版本');
  // 自动化外壳常把 ELECTRON_RUN_AS_NODE 带进子进程；带着它启动只会得到一个立刻退出的
  // Node 进程（还会把 --user-data-dir 之类当成 bad option），必须先清掉。
@@ -111,4 +169,4 @@ async function main(){
  throw Error('启动后没有检测到应用进程：'+executable);
 }
 if(require.main===module)main().catch(error=>{console.error('安装失败：'+error.message);process.exitCode=1;});
-module.exports={installerPath,installLocation,closeRunningApp};
+module.exports={installerPath,installLocation,closeRunningApp,repairShortcuts};

@@ -400,6 +400,8 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .quick-site{flex:0 0 auto;max-width:150px;height:24px;padding:0 10px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .quick-site:hover:not(:disabled){background:var(--hover);color:var(--text)}
 .quick-site:disabled{opacity:.6}
+/* 实例未启动时按钮仍可拖、可右键：只降透明度，保留 grab 光标，别再出现禁止符号 */
+.quick-site[aria-disabled="true"]{opacity:.62}
 .quick-empty{padding:0 6px;font-size:12px;color:var(--muted);white-space:nowrap}
 .quick-manage{width:26px;height:26px}
 .quick-manage svg{width:15px;height:15px}
@@ -501,6 +503,17 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cell-name b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell-error{display:block;color:var(--red);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell-clip,.cell-muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell-network{overflow:hidden}
+/* 实例管理「网络」列：代理名 + 代理管理里的延迟徽标 */
+.network-cell{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
+.network-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.net-latency{flex:0 0 auto;display:inline-flex;align-items:center;height:18px;padding:0 6px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--muted);font-size:11px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.net-latency.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 34%,var(--line));background:color-mix(in srgb,var(--green) 10%,var(--panel))}
+.net-latency.mid{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 34%,var(--line));background:color-mix(in srgb,var(--amber) 10%,var(--panel))}
+.net-latency.high{color:var(--red);border-color:color-mix(in srgb,var(--red) 34%,var(--line));background:color-mix(in srgb,var(--red) 10%,var(--panel))}
+.net-latency.bad{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line));background:color-mix(in srgb,var(--red) 12%,var(--panel))}
+.net-latency.none{opacity:.75}
+.net-latency.saved{opacity:.85;border-style:dashed}
 .cell-muted{color:var(--muted)}
 .card-actions{display:flex;align-items:center;justify-content:flex-end;gap:4px}
 
