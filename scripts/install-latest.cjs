@@ -2,9 +2,9 @@
 // Build → install → launch in one step: close the running app (NSIS refuses to
 // overwrite live instances), run the freshly built installer silently, then
 // start the installed executable and verify it matches the build output.
-const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{spawn,spawnSync,execFileSync}=require('node:child_process');
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),{spawn,spawnSync,execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..'),release=path.join(root,'release');
-const APP_GUID='2541b14a-9d68-53e3-866a-2bb1b96bd5e6',EXECUTABLE='QianXiAccounts.exe';
+const APP_GUID='2541b14a-9d68-53e3-866a-2bb1b96bd5e6',EXECUTABLE='QianXiAccounts.exe',APP_NAME='千禧accounts';
 const dry=process.argv.includes('--dry-run'),launch=!process.argv.includes('--no-launch');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const say=message=>console.log((dry?'[dry-run] ':'')+message);
@@ -126,15 +126,39 @@ function repairShortcuts(executable){
   "  if(Test-Path -LiteralPath $file){continue}",
   "  $link=$shell.CreateShortcut($file);$link.TargetPath=$exeFull;$link.WorkingDirectory=(Split-Path -Parent $exeFull);$link.IconLocation=$exeFull+',0';$link.Description=$name;$link.Save();$created+=$file;",
   "}",
-  "$pinnedFile=Join-Path $taskbar ($name+'.lnk');",
-  "if(-not (Test-Path -LiteralPath $pinnedFile)){",
-  "  $link=$shell.CreateShortcut($pinnedFile);$link.TargetPath=$exeFull;$link.WorkingDirectory=(Split-Path -Parent $exeFull);$link.IconLocation=$exeFull+',0';$link.Description=$name;$link.Save();$created+=$pinnedFile;",
-  "}",
-  "[pscustomobject]@{checked=$checked;fixed=$fixed;created=$created;pinned=$pinnedFile;target=$exeFull}|ConvertTo-Json -Depth 4 -Compress"
+  "[pscustomobject]@{checked=$checked;fixed=$fixed;created=$created;pinned=$pinned;target=$exeFull}|ConvertTo-Json -Depth 4 -Compress"
  ].join(' ');
  const out=execFileSync('powershell',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-EncodedCommand',Buffer.from(ps,'utf16le').toString('base64')],{encoding:'utf8',windowsHide:true});
  return JSON.parse(String(out||'{}').trim()||'{}');
-}async function main(){
+}// Win11 没有可用的代码接口把应用固定到任务栏（放 .lnk 只是候选、写 Taskband BLOB 会打坏
+// 已有固定项、Shell verb 已被移除）。tools/pin-taskbar.ps1 走键盘：Win+T 进任务栏 →
+// UIA 找到按钮 → 应用菜单键 → 按 AutomationId 命中 TaskbarPin/Unpin。这里直接复用，
+// 不做等价的自动点击。它需要交互式桌面，失败就如实报告，不假装成功。
+function pinToTaskbar(executable){
+ // Win11 没有代码接口能把应用固定到任务栏：放 .lnk 只是候选、写 Taskband BLOB 会打坏既有
+ // 固定项、Shell verb 也已被移除。pin-taskbar.ps1 走键盘（Win+T → UIA 找按钮 → 应用菜单键
+ // → 按 AutomationId 命中 TaskbarPin/Unpin）。这份实现搬自 U-Time 项目，已实测。
+ const script=path.join(__dirname,'pin-taskbar.ps1');
+ if(!fs.existsSync(script))return {ok:false,output:'缺少 scripts/pin-taskbar.ps1，未执行固定'};
+ // 参数里的中文不能直接塞进 -Command（PS 5.1 按 GBK 解析命令行会乱码），写一个带 BOM 的
+ // 临时脚本用 -File 跑；同时把控制台输出编码切成 UTF-8，node 才能正确读回中文。
+ const temp=path.join(os.tmpdir(),'qianxi-pin-'+process.pid+'.ps1');
+ const body=["$OutputEncoding=[Text.Encoding]::UTF8",
+  '[Console]::OutputEncoding=[Text.Encoding]::UTF8',
+  "& '"+script+"' -AppName '"+APP_NAME+"' -AppPath '"+executable+"'",
+  'exit $LASTEXITCODE'].join('\r\n');
+ try{
+  fs.writeFileSync(temp,'\uFEFF'+body+'\r\n',{encoding:'utf8'});
+  const out=execFileSync('powershell',['-NoProfile','-ExecutionPolicy','Bypass','-File',temp],{encoding:'utf8',windowsHide:true});
+  return {ok:true,output:String(out||'').trim()};
+ }catch(error){
+  const detail=String((error.stdout||'')+(error.stderr||'')||error.message||'').trim();
+  return {ok:false,output:detail};
+ }finally{
+  try{fs.rmSync(temp,{force:true});}catch{/* 临时脚本删不掉不影响结论 */}
+ }
+}
+async function main(){
  const installer=installerPath();
  const sha=verifyInstaller(installer);
  say('安装包：'+installer);
@@ -165,8 +189,16 @@ function repairShortcuts(executable){
  delete env.ELECTRON_NO_ATTACH_CONSOLE;
  const child=spawn(executable,[],{detached:true,stdio:'ignore',windowsHide:false,env});
  child.unref();
- for(let i=0;i<24;i++){if(runningAppProcesses().length)return say('已启动新版本：'+executable);await sleep(250);}
- throw Error('启动后没有检测到应用进程：'+executable);
+ let started=false;
+ for(let i=0;i<24;i++){if(runningAppProcesses().length){started=true;break}await sleep(250);}
+ if(!started)throw Error('启动后没有检测到应用进程：'+executable);
+ say('已启动新版本：'+executable);
+ // 应用起来了才能固定（任务栏按钮来自运行中的窗口）。固定失败不改变「安装成功」的结论，
+ // 但必须原样打印，不能吃掉。
+ const pinned=pinToTaskbar(executable);
+ for(const line of String(pinned.output||'').split(/\r?\n/).filter(Boolean))say('  '+line);
+ const lastLine=(String(pinned.output||'').split(/\r?\n/).filter(Boolean).slice(-1)[0])||'无输出';
+ say(pinned.ok?'任务栏固定：已确认（scripts/pin-taskbar.ps1）':'任务栏固定：未成功，需人工检查（'+lastLine+'）');
 }
 if(require.main===module)main().catch(error=>{console.error('安装失败：'+error.message);process.exitCode=1;});
-module.exports={installerPath,installLocation,closeRunningApp,repairShortcuts};
+module.exports={installerPath,installLocation,closeRunningApp,repairShortcuts,pinToTaskbar};

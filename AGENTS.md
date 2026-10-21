@@ -32,10 +32,15 @@ npm.cmd run install:latest    # 关闭旧进程 → 静默安装 → 校验 → 
 2. **前台/后台只要还有应用进程，先关闭它们**：`QianXiAccounts.exe`（含 `千禧accounts` 同名进程）逐个 `taskkill /F`，并轮询确认已退出。安装器自带 `customCheckAppRunning` 拒绝覆盖运行中的实例（退出码 2），所以这一步必须先做，不能靠安装器自己处理。
 3. 用安装器 `/S` 静默安装到现有安装目录（从 `HKCU\Software\2541b14a-9d68-53e3-866a-2bb1b96bd5e6` 的 `InstallLocation` 解析，回退卸载项目录 / `D:\QianXiAccounts` / `C:\QianXiAccounts`），保留原有实例与登录数据。
 4. 校验已安装的 `QianXiAccounts.exe` 存在、大小与构建产物一致，然后以 detached 方式启动，并确认进程真的起来了（起不来算失败）。启动前必须从子进程环境里删掉 `ELECTRON_RUN_AS_NODE`（自动化外壳常把它带进来），否则 exe 会当成 Node 跑、立刻退出且没有任何输出，`--user-data-dir` 之类的开关还会被报成 `bad option`。
-5. **快捷方式永远指向新版本 exe**：安装完当场扫描用户桌面、公共桌面、用户/公共开始菜单、任务栏固定（`%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar`）里的 `千禧accounts*.lnk`，凡是目标不是当前安装的 `QianXiAccounts.exe` 就改指过去（同时刷新 `WorkingDirectory` 与 `IconLocation`、把 `IconLocation` 的双反斜杠坏值一并修掉），桌面或开始菜单缺了就补一个，任务栏固定目录里的 `.lnk` 缺了也重建。任务栏固定项的目标丢失算失败。
+5. **快捷方式永远指向新版本 exe**：安装完当场扫描用户桌面、公共桌面、用户/公共开始菜单、任务栏固定（`%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar`）里的 `千禧accounts*.lnk`，凡是目标不是当前安装的 `QianXiAccounts.exe` 就改指过去（同时刷新 `WorkingDirectory` 与 `IconLocation`、把 `IconLocation` 的双反斜杠坏值一并修掉），桌面或开始菜单缺了就补一个。**任务栏那个 `.lnk` 不在这一步重建**——它的去留归 Explorer 管，缺了由下一步的 `pinToTaskbar()` 重新固定。
    - 判断「目标是否一致」必须先 `[IO.Path]::GetFullPath` 归一化再比，且脚本路径要以 base64 / `-EncodedCommand` 传给 PowerShell：用 `JSON.stringify` 拼字符串会让 `E:\a\b` 变成字面双反斜杠，比较永远不等，等于把本来正确的快捷方式反复改坏。
    - 路径只写经过 `Test-Path` 验证过的 exe；否则一次坏写入就会让 Windows 主动把固定项丢掉。
-   - 固定项（`.lnk` 文件）本身会被 Explorer 在安装期间因为目标短暂消失而丢弃；脚本只能把文件重建回来，是否真正显示在任务栏归 Explorer/开始菜单接管（本机装了 Start11，注册表 `Taskband\Favorites` 不代表真实状态）。所以安装后要**实际看一眼任务栏**，没有就让用户重新固定，不要用脚本返回成功冒充。
+   - 固定项（`.lnk` 文件）会被 Explorer 在安装期间因为目标短暂消失而丢弃；把文件重建回 `User Pinned\TaskBar` **只是让它成为候选，不会产生任务栏按钮**，不要拿这个冒充「已固定」。
+   - **实测：NSIS 每次覆盖安装都会把任务栏固定项删掉**，所以扫描时报「检查 2 个」（只剩桌面 + 开始菜单）是正常的，固定必须在安装完成后重做一次——这一步已由第 5 条下面的 `pinToTaskbar()` 自动完成，不需要人工。
+   - 真正固定/取消固定只能走键盘路线：`scripts/pin-taskbar.ps1`（从 U-Time 项目搬来的实测实现）。它 `Win+T` 把焦点交给任务栏 → UIA RawViewWalker 按名字找到按钮 → `SetFocus` → 应用菜单键弹跳转列表 → 按 `AutomationId`（`TaskbarPin` / `TaskbarUnpin`）精确命中并 Invoke。用 ID 而不是中文名，免疫语言与编码差异；幂等，已固定时再 Pin 只报告不误取消。
+   - `install:latest` 在**确认新版本进程起来之后**自动调用它（`pinToTaskbar()`），并且把脚本输出原样打印；结果失败要如实报「需人工检查」，不能因为脚本没抛错就宣布固定成功。
+   - 该脚本必须保存为 **UTF-8 with BOM**（PowerShell 5.1 否则按 GBK 解码中文乱码）；node 侧读它输出前先把 `[Console]::OutputEncoding` 切成 UTF-8，否则全是乱码。
+   - 不要改 `HKCU\...\Explorer\Taskband\Favorites`：那是未公开的 shell 序列化 BLOB，构造极易打坏既有固定项。
 6. 安装完必须回报：安装包路径与 SHA256、被关闭的进程、最终安装路径、被改指/新建的快捷方式、是否成功启动。任何一步失败都如实报告，不要用「界面提示成功」代替进程与文件状态验证。
 
 **升级只覆盖、不并行安装**：安装目录与可执行文件名必须保持固定（`QianXiAccounts.exe`，安装目录沿用注册表里的 `InstallLocation`），不要给路径或文件名加版本号、也不要另开第二个安装目录。快捷方式指向的是这个固定路径，路径不变它就一直有效；一旦为了「并存旧版本」改目录，任务栏快捷方式就会指向已经被替换掉的旧路径。旧版本没有单独保留的必要：`release/` 里留安装包与 `.sha256`，发布记录留在 `docs/releases/`。
