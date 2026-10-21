@@ -1,4 +1,4 @@
-param([string]$GuestInput='C:\FacetPathInput',[string]$GuestOutput='C:\FacetPathOutput',[switch]$OfficialUpgrade,[switch]$BrowseExistingProbe)
+param([string]$GuestInput='C:\QianXiAccountsPathInput',[string]$GuestOutput='C:\QianXiAccountsPathOutput',[switch]$OfficialUpgrade,[switch]$BrowseExistingProbe)
 $ErrorActionPreference='Stop'
 Add-Type -TypeDefinition @'
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Net.WebSockets;
 using System.Threading;
 using System.IO;
-public static class FacetInstallerUi {
+public static class QianXiInstallerUi {
  public delegate bool EnumCallback(IntPtr hwnd,IntPtr data);
  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumCallback cb,IntPtr data);
  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr hwnd,EnumCallback cb,IntPtr data);
@@ -46,7 +46,7 @@ public static class FacetInstallerUi {
  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hwnd,IntPtr dc,uint flags);
  [StructLayout(LayoutKind.Sequential)] public struct Rect { public int left,top,right,bottom; }
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
- public static IntPtr Window(int pid) { IntPtr found=IntPtr.Zero;EnumWindows((hw,d)=>{uint p;GetWindowThreadProcessId(hw,out p);var cls=new StringBuilder(100);GetClassName(hw,cls,cls.Capacity);if(p==pid&&cls.ToString()=="#32770"&&Text(hw).Contains("Facet")){found=hw;return false;}return true;},IntPtr.Zero);return found; }
+ public static IntPtr Window(int pid) { IntPtr found=IntPtr.Zero;EnumWindows((hw,d)=>{uint p;GetWindowThreadProcessId(hw,out p);var cls=new StringBuilder(100);GetClassName(hw,cls,cls.Capacity);if(p==pid&&cls.ToString()=="#32770"&&Text(hw).Contains("QianXi")){found=hw;return false;}return true;},IntPtr.Zero);return found; }
  public static IntPtr Control(IntPtr parent,int id) { var direct=GetDlgItem(parent,id);if(direct!=IntPtr.Zero)return direct;IntPtr found=IntPtr.Zero;EnumChildWindows(parent,(hw,d)=>{if(GetDlgCtrlID(hw)==id){found=hw;return false;}return true;},IntPtr.Zero);return found; }
  public static string Text(IntPtr hwnd){var s=new StringBuilder(2048);IntPtr result;ReadText(hwnd,0xD,(IntPtr)s.Capacity,s,2,1000,out result);return s.ToString();}
  public static List<object> Inspect(IntPtr parent){var rows=new List<object>();EnumChildWindows(parent,(hw,d)=>{var cls=new StringBuilder(100);GetClassName(hw,cls,cls.Capacity);rows.Add(new {id=GetDlgCtrlID(hw),hwnd=hw.ToInt64(),visible=IsWindowVisible(hw),type=cls.ToString(),text=Text(hw)});return true;},IntPtr.Zero);return rows;}
@@ -55,55 +55,55 @@ public static class FacetInstallerUi {
  public static string Evaluate(string uri,string command){using(var socket=new ClientWebSocket())using(var timeout=new CancellationTokenSource(20000)){socket.ConnectAsync(new Uri(uri),timeout.Token).GetAwaiter().GetResult();var bytes=Encoding.UTF8.GetBytes(command);socket.SendAsync(new ArraySegment<byte>(bytes),WebSocketMessageType.Text,true,timeout.Token).GetAwaiter().GetResult();var buffer=new byte[65536];while(true){using(var message=new MemoryStream()){WebSocketReceiveResult part;do{part=socket.ReceiveAsync(new ArraySegment<byte>(buffer),timeout.Token).GetAwaiter().GetResult();message.Write(buffer,0,part.Count);}while(!part.EndOfMessage);var text=Encoding.UTF8.GetString(message.ToArray());if(text.Contains("\"id\":1,"))return text;}}}}
 }
 '@
-[FacetInstallerUi]::SetProcessDPIAware()|Out-Null
+[QianXiInstallerUi]::SetProcessDPIAware()|Out-Null
 Add-Type -AssemblyName System.Drawing
 $report=@{environment='Windows Sandbox';results=@();errors=@();policy='build/install-path.nsh';probeRegistryGuid='42a2cd2b-8cfb-4bc9-8ef8-74c3961f7460'}
-$probeRoot=Join-Path $env:TEMP ('FacetInstallPathTest-'+[guid]::NewGuid().ToString('N'))
+$probeRoot=Join-Path $env:TEMP ('QianXiInstallPathTest-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $probeRoot | Out-Null
-$installerName=if($OfficialUpgrade){'Facet-Setup-0.2.4-install-path-x64.exe'}else{'Facet-Install-Path-Validation.exe'}
+$installerName=if($OfficialUpgrade){'QianXi-Setup-0.2.4-install-path-x64.exe'}else{'QianXi-Install-Path-Validation.exe'}
 $exe=Join-Path $probeRoot $installerName
 Copy-Item -LiteralPath (Join-Path $GuestInput $installerName) -Destination $exe
 $probeGuid='42a2cd2b-8cfb-4bc9-8ef8-74c3961f7460'
-$probeInstall=Join-Path $probeRoot 'Chosen Parent\Facet'
+$probeInstall=Join-Path $probeRoot 'Chosen Parent\QianXiAccounts'
 $probeDisk=Join-Path $probeRoot 'DDrive'
 $process=$null;$window=[IntPtr]::Zero;$mapped=$false;$smokeProcess=$null
 function Assert-Task($condition,[string]$message){if(-not $condition){throw $message}}
 function Pass-Task([string]$message){$report.results+= $message;Write-Output ('PASS '+$message)}
 function Wait-Task([scriptblock]$check,[string]$label,[int]$seconds=30){$until=(Get-Date).AddSeconds($seconds);do{if(& $check){return};Start-Sleep -Milliseconds 100}while((Get-Date)-lt $until);throw ('Timeout: '+$label)}
-function Click-Task([IntPtr]$control){Assert-Task ($control -ne [IntPtr]::Zero) 'Control not found';Assert-Task ([FacetInstallerUi]::FocusControl($control)) 'Could not focus action button';Assert-Task ([FacetInstallerUi]::Post($window,0x111,[IntPtr]([FacetInstallerUi]::GetDlgCtrlID($control)),$control)) 'Button dispatch failed'}
-function Screenshot-Task([string]$name){[FacetInstallerUi]::ShowWindow($window,5)|Out-Null;[FacetInstallerUi]::SetWindowPos($window,[IntPtr]::Zero,20,20,0,0,0x15)|Out-Null;[FacetInstallerUi]::SetForegroundWindow($window)|Out-Null;Start-Sleep -Milliseconds 250;$rect=New-Object FacetInstallerUi+Rect;[FacetInstallerUi]::GetWindowRect($window,[ref]$rect)|Out-Null;$bitmap=New-Object Drawing.Bitmap ($rect.right-$rect.left),($rect.bottom-$rect.top);$graphics=[Drawing.Graphics]::FromImage($bitmap);try{$graphics.CopyFromScreen($rect.left,$rect.top,0,0,$bitmap.Size)}finally{$graphics.Dispose()};$bitmap.Save((Join-Path $GuestOutput $name),[Drawing.Imaging.ImageFormat]::Png);$bitmap.Dispose()}
+function Click-Task([IntPtr]$control){Assert-Task ($control -ne [IntPtr]::Zero) 'Control not found';Assert-Task ([QianXiInstallerUi]::FocusControl($control)) 'Could not focus action button';Assert-Task ([QianXiInstallerUi]::Post($window,0x111,[IntPtr]([QianXiInstallerUi]::GetDlgCtrlID($control)),$control)) 'Button dispatch failed'}
+function Screenshot-Task([string]$name){[QianXiInstallerUi]::ShowWindow($window,5)|Out-Null;[QianXiInstallerUi]::SetWindowPos($window,[IntPtr]::Zero,20,20,0,0,0x15)|Out-Null;[QianXiInstallerUi]::SetForegroundWindow($window)|Out-Null;Start-Sleep -Milliseconds 250;$rect=New-Object QianXiInstallerUi+Rect;[QianXiInstallerUi]::GetWindowRect($window,[ref]$rect)|Out-Null;$bitmap=New-Object Drawing.Bitmap ($rect.right-$rect.left),($rect.bottom-$rect.top);$graphics=[Drawing.Graphics]::FromImage($bitmap);try{$graphics.CopyFromScreen($rect.left,$rect.top,0,0,$bitmap.Size)}finally{$graphics.Dispose()};$bitmap.Save((Join-Path $GuestOutput $name),[Drawing.Imaging.ImageFormat]::Png);$bitmap.Dispose()}
 function Open-DirectoryPage {
  # The user requested an interactive installation check; show this task's wizard in the sandbox.
  $script:process=Start-Process -FilePath $exe -ArgumentList '/currentuser' -WindowStyle Normal -PassThru
- Wait-Task { $script:window=[FacetInstallerUi]::Window($script:process.Id);$script:window -ne [IntPtr]::Zero } 'installer window'
+ Wait-Task { $script:window=[QianXiInstallerUi]::Window($script:process.Id);$script:window -ne [IntPtr]::Zero } 'installer window'
  $report.window=$window.ToInt64()
  $report.processId=$process.Id
- $report.windowTitle=[FacetInstallerUi]::Text($window)
- $report.initialButton=[FacetInstallerUi]::Control($window,1).ToInt64()
- Wait-Task { [FacetInstallerUi]::Control($window,1) -ne [IntPtr]::Zero } 'first installer page'
+ $report.windowTitle=[QianXiInstallerUi]::Text($window)
+ $report.initialButton=[QianXiInstallerUi]::Control($window,1).ToInt64()
+ Wait-Task { [QianXiInstallerUi]::Control($window,1) -ne [IntPtr]::Zero } 'first installer page'
  # NSIS creates controls before showing its first page. Do not navigate while initialization hides it.
- Wait-Task { [FacetInstallerUi]::IsWindowVisible($window) } 'visible first installer page'
- [FacetInstallerUi]::SetForegroundWindow($window)|Out-Null
+ Wait-Task { [QianXiInstallerUi]::IsWindowVisible($window) } 'visible first installer page'
+ [QianXiInstallerUi]::SetForegroundWindow($window)|Out-Null
  Start-Sleep -Milliseconds 300
  for($i=0;$i-lt 4;$i++){
-  if([FacetInstallerUi]::Control($window,1019)-ne[IntPtr]::Zero){[FacetInstallerUi]::ShowWindow($window,5)|Out-Null;return}
-  Click-Task ([FacetInstallerUi]::Control($window,1));Start-Sleep -Milliseconds 400
+  if([QianXiInstallerUi]::Control($window,1019)-ne[IntPtr]::Zero){[QianXiInstallerUi]::ShowWindow($window,5)|Out-Null;return}
+  Click-Task ([QianXiInstallerUi]::Control($window,1));Start-Sleep -Milliseconds 400
  }
  throw 'Directory page not reached'
 }
 function Cancel-Installer {
- if($process -and -not $process.HasExited){[FacetInstallerUi]::Post($window,0x10,[IntPtr]::Zero,[IntPtr]::Zero)|Out-Null;Wait-Task {$process.HasExited} 'cancel installer'}
+ if($process -and -not $process.HasExited){[QianXiInstallerUi]::Post($window,0x10,[IntPtr]::Zero,[IntPtr]::Zero)|Out-Null;Wait-Task {$process.HasExited} 'cancel installer'}
  $script:process=$null
 }
 function Set-Directory([string]$value,[bool]$keepFocus=$false){
- $edit=[FacetInstallerUi]::Control($window,1019)
- if($keepFocus){Assert-Task ([FacetInstallerUi]::FocusControl($edit)) 'Could not focus path editor'}
- [FacetInstallerUi]::SendText($edit,0xC,[IntPtr]::Zero,$value)|Out-Null
- if(-not $keepFocus){$browse=[FacetInstallerUi]::Control($window,1001);Assert-Task ([FacetInstallerUi]::FocusControl($browse)) 'Could not move focus out of path editor'}
+ $edit=[QianXiInstallerUi]::Control($window,1019)
+ if($keepFocus){Assert-Task ([QianXiInstallerUi]::FocusControl($edit)) 'Could not focus path editor'}
+ [QianXiInstallerUi]::SendText($edit,0xC,[IntPtr]::Zero,$value)|Out-Null
+ if(-not $keepFocus){$browse=[QianXiInstallerUi]::Control($window,1001);Assert-Task ([QianXiInstallerUi]::FocusControl($browse)) 'Could not move focus out of path editor'}
 }
 function Installed-DataHashes {
  $hashes=@{}
- foreach($leaf in @('Facet','ArenaCore')){
+ foreach($leaf in @('QianXi','ArenaCore')){
   $dir=Join-Path $env:APPDATA $leaf
   if(Test-Path -LiteralPath $dir){foreach($file in @(Get-ChildItem -LiteralPath $dir -Recurse -File)){ $hashes[$file.FullName]=(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash }}
  }
@@ -111,7 +111,7 @@ function Installed-DataHashes {
 }
 function Eval-App([string]$expression){
  $cmd=@{id=1;method='Runtime.evaluate';params=@{expression=$expression;awaitPromise=$true;returnByValue=$true}}|ConvertTo-Json -Depth 5 -Compress
- $reply=[FacetInstallerUi]::Evaluate($script:appTarget.webSocketDebuggerUrl,$cmd)|ConvertFrom-Json
+ $reply=[QianXiInstallerUi]::Evaluate($script:appTarget.webSocketDebuggerUrl,$cmd)|ConvertFrom-Json
  Assert-Task (-not $reply.error -and -not $reply.result.exceptionDetails) 'Installed app CDP evaluation failed'
  return $reply.result.result.value
 }
@@ -130,22 +130,22 @@ function Close-App {
  $script:smokeProcess=$null
 }
 function Test-OfficialUpgrade {
- Assert-Task (-not @(Get-Process -Name Facet -ErrorAction SilentlyContinue).Count) 'Existing app is running; preserve its sessions and exit before installation'
+ Assert-Task (-not @(Get-Process -Name QianXi -ErrorAction SilentlyContinue).Count) 'Existing app is running; preserve its sessions and exit before installation'
  $registry='HKCU:\Software\60de22d0-2353-5a0b-a5c8-137814d0b53f'
  $location=(Get-ItemProperty $registry).InstallLocation
  $before=Installed-DataHashes
  $report.originalInstallLocation=$location;$report.originalDataFileCount=$before.Count;$report.identity='official product'
  Open-DirectoryPage
- Assert-Task ([FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019))-eq $location) 'Official installer changed the existing installation path'
+ Assert-Task ([QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019))-eq $location) 'Official installer changed the existing installation path'
  Screenshot-Task 'official-upgrade-path.png'
- Click-Task ([FacetInstallerUi]::Control($window,1))
- Wait-Task { $c=[FacetInstallerUi]::Control($window,1);$c-ne[IntPtr]::Zero-and[FacetInstallerUi]::IsWindowEnabled($c)-and([FacetInstallerUi]::Text($c)-match '完成|Finish') } 'official installation finished' 90
+ Click-Task ([QianXiInstallerUi]::Control($window,1))
+ Wait-Task { $c=[QianXiInstallerUi]::Control($window,1);$c-ne[IntPtr]::Zero-and[QianXiInstallerUi]::IsWindowEnabled($c)-and([QianXiInstallerUi]::Text($c)-match '完成|Finish') } 'official installation finished' 90
  Screenshot-Task 'official-install-finished.png'
- Click-Task ([FacetInstallerUi]::Control($window,1));Wait-Task {$process.HasExited} 'official installer exit';Assert-Task ($process.ExitCode-eq 0) 'Official installer failed';$script:process=$null
+ Click-Task ([QianXiInstallerUi]::Control($window,1));Wait-Task {$process.HasExited} 'official installer exit';Assert-Task ($process.ExitCode-eq 0) 'Official installer failed';$script:process=$null
  Assert-Task ((Get-ItemProperty $registry).InstallLocation-eq$location) 'Official registry path mismatch'
- $script:installedExe=Join-Path $location 'Facet.exe'
+ $script:installedExe=Join-Path $location 'QianXiAccounts.exe'
  Assert-Task (Test-Path -LiteralPath $installedExe) 'Official installed executable missing'
- foreach($file in @('app.asar','mihomo\mihomo.exe','process-host\facet-process-host.exe','facet.ico')){Assert-Task (Test-Path -LiteralPath (Join-Path $location ('resources\'+$file))) ('Missing official resource: '+$file)}
+ foreach($file in @('app.asar','mihomo\mihomo.exe','process-host\qianxi-process-host.exe','qianxi.ico')){Assert-Task (Test-Path -LiteralPath (Join-Path $location ('resources\'+$file))) ('Missing official resource: '+$file)}
  $report.asarHash=(Get-FileHash -LiteralPath (Join-Path $location 'resources\app.asar')).Hash
  $after=Installed-DataHashes
  Assert-Task ($before.Count-eq$after.Count) 'Installation changed user data file count'
@@ -173,20 +173,20 @@ try {
   Assert-Task (Test-Path -LiteralPath ('HKCU:\Software\'+$probeGuid)) 'Browse test requires an already verified probe installation'
   $browseParent=Join-Path $probeRoot 'Browse Parent';New-Item -ItemType Directory -Path $browseParent|Out-Null
   Open-DirectoryPage
-  $browse=[FacetInstallerUi]::Control($window,1001)
-  Assert-Task ([FacetInstallerUi]::FocusControl($browse)) 'Cannot focus Browse'
-  [FacetInstallerUi]::Post([FacetInstallerUi]::GetParent($browse),0x111,[IntPtr]1001,$browse)|Out-Null
-  Wait-Task {$script:browseWindow=[FacetInstallerUi]::NamedWindow($process.Id,'浏览文件夹');$browseWindow-ne[IntPtr]::Zero} 'real folder selection dialog'
-  Wait-Task {[FacetInstallerUi]::IsWindowVisible($browseWindow)-and [FacetInstallerUi]::Control($browseWindow,1)-ne[IntPtr]::Zero} 'folder picker ready'
+  $browse=[QianXiInstallerUi]::Control($window,1001)
+  Assert-Task ([QianXiInstallerUi]::FocusControl($browse)) 'Cannot focus Browse'
+  [QianXiInstallerUi]::Post([QianXiInstallerUi]::GetParent($browse),0x111,[IntPtr]1001,$browse)|Out-Null
+  Wait-Task {$script:browseWindow=[QianXiInstallerUi]::NamedWindow($process.Id,'浏览文件夹');$browseWindow-ne[IntPtr]::Zero} 'real folder selection dialog'
+  Wait-Task {[QianXiInstallerUi]::IsWindowVisible($browseWindow)-and [QianXiInstallerUi]::Control($browseWindow,1)-ne[IntPtr]::Zero} 'folder picker ready'
   Start-Sleep -Milliseconds 1000
-  Assert-Task ([FacetInstallerUi]::SelectFolder($browseWindow,$process.Id,$browseParent)) 'Folder picker selection failed'
+  Assert-Task ([QianXiInstallerUi]::SelectFolder($browseWindow,$process.Id,$browseParent)) 'Folder picker selection failed'
   Start-Sleep -Milliseconds 500
-  $confirm=[FacetInstallerUi]::Control($browseWindow,1)
-  Wait-Task {[FacetInstallerUi]::IsWindowEnabled($confirm)} 'folder selection confirmation' 10
-  [FacetInstallerUi]::Post($browseWindow,0x111,[IntPtr]1,$confirm)|Out-Null
-  Wait-Task {[FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019))-eq (Join-Path $browseParent 'Facet')} 'browse selection appended Facet'
+  $confirm=[QianXiInstallerUi]::Control($browseWindow,1)
+  Wait-Task {[QianXiInstallerUi]::IsWindowEnabled($confirm)} 'folder selection confirmation' 10
+  [QianXiInstallerUi]::Post($browseWindow,0x111,[IntPtr]1,$confirm)|Out-Null
+  Wait-Task {[QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019))-eq (Join-Path $browseParent 'QianXi')} 'browse selection appended QianXi'
   Screenshot-Task 'browse-selected-parent.png'
-  Pass-Task 'Real Browse button opened the Windows folder picker and choosing a parent visibly appended Facet'
+  Pass-Task 'Real Browse button opened the Windows folder picker and choosing a parent visibly appended QianXi'
   Cancel-Installer
  }elseif($OfficialUpgrade){Test-OfficialUpgrade}else{
  Assert-Task (-not(Test-Path -LiteralPath ('HKCU:\Software\'+$probeGuid))) 'Probe identity already installed; preserve it and choose a fresh identity'
@@ -194,41 +194,41 @@ try {
  $originalInstall=Get-ItemProperty 'HKCU:\Software\60de22d0-2353-5a0b-a5c8-137814d0b53f' -ErrorAction SilentlyContinue
  $report.originalInstallLocation=$originalInstall.InstallLocation
  Open-DirectoryPage
- Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq 'C:\Facet' } 'C fallback default'
- Screenshot-Task 'default-c.png';Pass-Task 'Without D, the real NSIS directory page defaults to C:\Facet'
- Set-Directory 'C:\';Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq 'C:\Facet' } 'root gets child folder'
- Assert-Task ([FacetInstallerUi]::IsWindowEnabled([FacetInstallerUi]::Control($window,1))) 'Install remains disabled after C root normalization'
+ Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq 'C:\QianXiAccounts' } 'C fallback default'
+ Screenshot-Task 'default-c.png';Pass-Task 'Without D, the real NSIS directory page defaults to C:\QianXiAccounts'
+ Set-Directory 'C:\';Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq 'C:\QianXiAccounts' } 'root gets child folder'
+ Assert-Task ([QianXiInstallerUi]::IsWindowEnabled([QianXiInstallerUi]::Control($window,1))) 'Install remains disabled after C root normalization'
  Set-Directory (Join-Path $probeRoot 'Typed Parent') $true;Start-Sleep -Milliseconds 1100
- Assert-Task ([FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Typed Parent')) 'Typing was interrupted'
- Set-Directory (Join-Path $probeRoot 'Typed Parent');Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Typed Parent\Facet') } 'parent gets child folder'
- Set-Directory (Join-Path $probeRoot 'Already\Facet\');Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Already\Facet') } 'existing leaf not doubled'
- Pass-Task 'Root/parent directories get a visible Facet child; typed paths stay editable; existing Facet leaf is not repeated'
+ Assert-Task ([QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Typed Parent')) 'Typing was interrupted'
+ Set-Directory (Join-Path $probeRoot 'Typed Parent');Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Typed Parent\QianXi') } 'parent gets child folder'
+ Set-Directory (Join-Path $probeRoot 'Already\QianXi\');Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq (Join-Path $probeRoot 'Already\QianXi') } 'existing leaf not doubled'
+ Pass-Task 'Root/parent directories get a visible QianXi child; typed paths stay editable; existing QianXi leaf is not repeated'
  Cancel-Installer
  New-Item -ItemType Directory -Path $probeDisk | Out-Null
  & subst.exe D: $probeDisk;Assert-Task ($LASTEXITCODE -eq 0) 'D drive mapping failed';$mapped=$true
- Open-DirectoryPage;Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq 'D:\Facet' } 'D preferred default'
- Screenshot-Task 'default-d.png';Pass-Task 'With a real accessible D drive mapping, a fresh install defaults to D:\Facet'
- Set-Directory (Join-Path $probeRoot 'Chosen Parent');Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq $probeInstall } 'chosen path ready'
+ Open-DirectoryPage;Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq 'D:\QianXiAccounts' } 'D preferred default'
+ Screenshot-Task 'default-d.png';Pass-Task 'With a real accessible D drive mapping, a fresh install defaults to D:\QianXiAccounts'
+ Set-Directory (Join-Path $probeRoot 'Chosen Parent');Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq $probeInstall } 'chosen path ready'
  Screenshot-Task 'custom-parent.png';Assert-Task (-not(Test-Path -LiteralPath $probeInstall)) 'Folder created prematurely while browsing'
- Click-Task ([FacetInstallerUi]::Control($window,1))
- Wait-Task { Test-Path -LiteralPath (Join-Path $probeInstall 'Facet.exe') } 'actual installed executable' 60
- Wait-Task { $c=[FacetInstallerUi]::Control($window,1);$c-ne[IntPtr]::Zero-and[FacetInstallerUi]::IsWindowEnabled($c)-and([FacetInstallerUi]::Text($c)-match '完成|Finish') } 'installation finished' 60
- Click-Task ([FacetInstallerUi]::Control($window,1));Wait-Task {$process.HasExited} 'finish installer';Assert-Task ($process.ExitCode-eq 0) 'Installation did not exit successfully';$process=$null
+ Click-Task ([QianXiInstallerUi]::Control($window,1))
+ Wait-Task { Test-Path -LiteralPath (Join-Path $probeInstall 'QianXiAccounts.exe') } 'actual installed executable' 60
+ Wait-Task { $c=[QianXiInstallerUi]::Control($window,1);$c-ne[IntPtr]::Zero-and[QianXiInstallerUi]::IsWindowEnabled($c)-and([QianXiInstallerUi]::Text($c)-match '完成|Finish') } 'installation finished' 60
+ Click-Task ([QianXiInstallerUi]::Control($window,1));Wait-Task {$process.HasExited} 'finish installer';Assert-Task ($process.ExitCode-eq 0) 'Installation did not exit successfully';$process=$null
  $reg=Get-ItemProperty ('HKCU:\Software\'+$probeGuid);Assert-Task ($reg.InstallLocation-eq$probeInstall) 'Registered install directory mismatch'
  $report.installLocation=$reg.InstallLocation
  $report.asarHash=(Get-FileHash -LiteralPath (Join-Path $probeInstall 'resources\app.asar')).Hash
  Assert-Task (Test-Path -LiteralPath (Join-Path $probeInstall 'resources\mihomo\mihomo.exe')) 'Missing real application resources'
- Pass-Task 'Installing creates the previously absent chosen parent/Facet folder, actual executable/resources and matching registry entry'
- Open-DirectoryPage;Wait-Task { [FacetInstallerUi]::Text([FacetInstallerUi]::Control($window,1019)) -eq $probeInstall } 'upgrade preserves existing path'
+ Pass-Task 'Installing creates the previously absent chosen parent/QianXi folder, actual executable/resources and matching registry entry'
+ Open-DirectoryPage;Wait-Task { [QianXiInstallerUi]::Text([QianXiInstallerUi]::Control($window,1019)) -eq $probeInstall } 'upgrade preserves existing path'
  Screenshot-Task 'existing-path.png';Cancel-Installer;Pass-Task 'A subsequent installer run retains the installed custom path even while D is available'
  $after=Get-ItemProperty 'HKCU:\Software\60de22d0-2353-5a0b-a5c8-137814d0b53f' -ErrorAction SilentlyContinue
  Assert-Task ($after.InstallLocation-eq$report.originalInstallLocation) 'Original application registration was changed'
  Pass-Task 'Existing product registration remains unchanged; all installation writes use the separate test identity and directory'
  }
-} catch { $report.errors+= $_.Exception.Message;$report.focus=[FacetInstallerUi]::Focused($window);$report.controls=[FacetInstallerUi]::Inspect($window);if($process){$report.windows=[FacetInstallerUi]::Windows($process.Id)};if($window-ne[IntPtr]::Zero -and $process -and -not $process.HasExited){try{Screenshot-Task 'failure.png'}catch{}};Write-Error $_ -ErrorAction Continue }
+} catch { $report.errors+= $_.Exception.Message;$report.focus=[QianXiInstallerUi]::Focused($window);$report.controls=[QianXiInstallerUi]::Inspect($window);if($process){$report.windows=[QianXiInstallerUi]::Windows($process.Id)};if($window-ne[IntPtr]::Zero -and $process -and -not $process.HasExited){try{Screenshot-Task 'failure.png'}catch{}};Write-Error $_ -ErrorAction Continue }
 finally {
  if($smokeProcess -and -not $smokeProcess.HasExited){try{Close-App}catch{$report.errors+='App cleanup: '+$_.Exception.Message}}
- if($process -and -not $process.HasExited){try{$picker=[FacetInstallerUi]::NamedWindow($process.Id,'浏览文件夹');if($picker-ne[IntPtr]::Zero){[FacetInstallerUi]::Post($picker,0x111,[IntPtr]2,[FacetInstallerUi]::Control($picker,2))|Out-Null;Start-Sleep -Milliseconds 300};Cancel-Installer}catch{ $report.errors+= 'Test installer cleanup: '+$_.Exception.Message }}
+ if($process -and -not $process.HasExited){try{$picker=[QianXiInstallerUi]::NamedWindow($process.Id,'浏览文件夹');if($picker-ne[IntPtr]::Zero){[QianXiInstallerUi]::Post($picker,0x111,[IntPtr]2,[QianXiInstallerUi]::Control($picker,2))|Out-Null;Start-Sleep -Milliseconds 300};Cancel-Installer}catch{ $report.errors+= 'Test installer cleanup: '+$_.Exception.Message }}
  if($mapped){& subst.exe D: /D}
  $report.probeDirectory=$probeRoot
  $report.finished=(Get-Date -Format o)

@@ -1,7 +1,7 @@
 'use strict';
 // Three separate real Chromium processes: source shutdown, offline snapshot/import, destination restart.
 const {app,BrowserWindow,session,dialog}=require('electron'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const root=process.env.FACET_TRANSFER_TEST_ROOT,phase=process.env.FACET_TRANSFER_TEST_PHASE,url=process.env.FACET_TRANSFER_TEST_URL;
+const root=process.env.QIANXI_TRANSFER_TEST_ROOT,phase=process.env.QIANXI_TRANSFER_TEST_PHASE,url=process.env.QIANXI_TRANSFER_TEST_URL;
 if(!root||!phase||!url)throw Error('Use the instance-transfer-runner');
 const dir=path.join(root,phase==='source'||phase==='finalize'?'source':'destination');fs.mkdirSync(dir,{recursive:true});app.setPath('userData',dir);
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{finalizePending,withCookies}=require('../src/main/instance-transfer.cjs');
@@ -9,8 +9,8 @@ const wait=async fn=>{for(let i=0;i<200;i++){if(await fn())return;await new Prom
 let c,w;setTimeout(()=>app.exit(2),120000).unref();
 app.whenReady().then(async()=>{try{
  if(phase==='finalize'){
-  const result=await finalizePending(dir);assert.equal(result,null);assert(fs.existsSync(path.join(root,'instances.facetbackup')));assert(!fs.existsSync(path.join(dir,'instance-export.pending')));
-  fs.writeFileSync(path.join(root,'finalize.json'),JSON.stringify({status:'success',bytes:fs.statSync(path.join(root,'instances.facetbackup')).size}));console.log('PASS completed live backup survives source process exit without pending restart task');app.quit();return;
+  const result=await finalizePending(dir);assert.equal(result,null);assert(fs.existsSync(path.join(root,'instances.qianxibackup')));assert(!fs.existsSync(path.join(dir,'instance-export.pending')));
+  fs.writeFileSync(path.join(root,'finalize.json'),JSON.stringify({status:'success',bytes:fs.statSync(path.join(root,'instances.qianxibackup')).size}));console.log('PASS completed live backup survives source process exit without pending restart task');app.quit();return;
  }
  w=new BrowserWindow({width:1400,height:900,show:true,webPreferences:{preload:path.join(__dirname,'../src/main/preload.cjs'),sandbox:true,contextIsolation:true}});
  c=new Controller(w,dir,path.join(__dirname,'../resources/mihomo/mihomo.exe'));installIPC(w,c);w.webContents.on('console-message',(_event,...args)=>{const text=args.find(x=>typeof x==='string'&&x.includes('Error'));if(text)console.error(text);});
@@ -32,15 +32,15 @@ app.whenReady().then(async()=>{try{
   // Add real excluded files so archive filtering is checked on the emitted artifact.
   const plugin=path.join(dir,'Partitions','arena-core-'+a.id,'Local Extension Settings','fixture');fs.mkdirSync(plugin,{recursive:true});fs.writeFileSync(path.join(plugin,'state'),'extension-test-value');
   c.store.saveNodes(a.id,[{name:'Source proxy',type:'http',server:'127.0.0.1',port:Number(new URL(url).port),username:'source-user',password:'source-proxy-secret'}],null);c.store.update(a.id,{network:{mode:'mihomo',nodeName:'Source proxy'}});await c.stop(a.id);await c.start(a.id);await wait(()=>c.runtimes.get(a.id).pageState.startsWith('已完成'));require('../src/main/diagnostics.cjs').TARGETS.ip=url+'geo';
-  c.diagnostics.run([{instanceId:a.id,name:'Source proxy'}],'ip');await wait(()=>!c.diagnostics.work);c.transferRestart=()=>{throw Error('unexpected app restart')};dialog.showSaveDialog=async()=>({canceled:false,filePath:path.join(root,'instances.facetbackup')});
+  c.diagnostics.run([{instanceId:a.id,name:'Source proxy'}],'ip');await wait(()=>!c.diagnostics.work);c.transferRestart=()=>{throw Error('unexpected app restart')};dialog.showSaveDialog=async()=>({canceled:false,filePath:path.join(root,'instances.qianxibackup')});
   await ui(`showExport([${JSON.stringify(a.id)}]);document.querySelector('#transferExportMode').value='combined';document.querySelector('[data-transfer="export-commit"]').click()`);
-  await wait(()=>ui('modal?.type==="instance-export-result"'));assert(fs.existsSync(path.join(root,'instances.facetbackup')));assert(!fs.existsSync(path.join(dir,'instance-export.pending')));assert.equal(c.runtimes.get(a.id).status,'running');assert.equal(c.runtimes.get(b.id).status,'running');console.log('PASS actual notes UI hides body, isolated cookies and live export without app restart');await c.closeAll();app.quit();return;
+  await wait(()=>ui('modal?.type==="instance-export-result"'));assert(fs.existsSync(path.join(root,'instances.qianxibackup')));assert(!fs.existsSync(path.join(dir,'instance-export.pending')));assert.equal(c.runtimes.get(a.id).status,'running');assert.equal(c.runtimes.get(b.id).status,'running');console.log('PASS actual notes UI hides body, isolated cookies and live export without app restart');await c.closeAll();app.quit();return;
  }
  if(phase==='import'){
   const source=JSON.parse(fs.readFileSync(path.join(root,'source-result.json'))),prior=fs.readFileSync(c.store.file),before=c.store.list().length;
-  const bad=fs.readFileSync(path.join(root,'instances.facetbackup'));bad[70]^=1;fs.writeFileSync(path.join(root,'tampered.facetbackup'),bad);await assert.rejects(c.transfer.inspect(path.join(root,'tampered.facetbackup')));assert.equal(c.store.list().length,before);
+  const bad=fs.readFileSync(path.join(root,'instances.qianxibackup'));bad[70]^=1;fs.writeFileSync(path.join(root,'tampered.qianxibackup'),bad);await assert.rejects(c.transfer.inspect(path.join(root,'tampered.qianxibackup')));assert.equal(c.store.list().length,before);
   await c.library.save({name:'目标设备节点',text:JSON.stringify({proxies:[{name:'New proxy',type:'http',server:'127.0.0.1',port:Number(new URL(url).port),username:'new-user',password:'new-proxy-secret'}]})});require('../src/main/diagnostics.cjs').TARGETS.ip=url+'geo';
-  dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'instances.facetbackup')]});
+  dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'instances.qianxibackup')]});
   await ui("route('overview')");await wait(()=>ui('!!document.querySelector("[data-transfer=import]")'));
   await ui(`document.querySelector('[data-transfer="import"]').click()`);await wait(()=>ui('modal?.type==="instance-import-choices"&&!modal.busy'));
   assert((await ui('document.querySelector(".transfer-country").textContent')).includes('United States'));assert((await ui('document.querySelector(".transfer-notes").textContent')).includes('待办'));
@@ -54,7 +54,7 @@ app.whenReady().then(async()=>{try{
  if(phase==='import-fallback'){
   const source=JSON.parse(fs.readFileSync(path.join(root,'source-result.json'))),before=c.store.list().length;
   require('../src/main/diagnostics.cjs').TARGETS.ip=url+'geo-fail';
-  dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'instances.facetbackup')]});
+  dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'instances.qianxibackup')]});
   await ui(`route('overview');document.querySelector('[data-transfer="import"]').click()`);await wait(()=>ui('modal?.type==="instance-import-choices"&&!modal.busy'));
   const original=await ui('transferDraft.instances[0].environment');
   assert(!(await ui('document.querySelector("#modal").textContent')).includes('取消本次导入'));

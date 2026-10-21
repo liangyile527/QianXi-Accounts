@@ -2,7 +2,7 @@
 // Isolate the UI test and always reclaim its own process tree, including failed assertions.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawn,spawnSync}=require('node:child_process');
 const {childEnvironment,resolveRuntime}=require('../scripts/electron-runtime.cjs');
-const out=fs.mkdtempSync(path.join(os.tmpdir(),'facet-notice-results-')),env={...childEnvironment(),NOTICE_OUTPUT:out},exe=resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env});
+const out=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-notice-results-')),env={...childEnvironment(),NOTICE_OUTPUT:out},exe=resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env});
 const child=spawn(exe,[path.join(__dirname,'notice-electron.cjs')],{env,cwd:path.resolve(__dirname,'..'),stdio:'inherit',windowsHide:false});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let exited=false;child.once('exit',()=>{exited=true;});child.once('error',e=>{console.error(e.message);exited=true;});
 function reclaim(){if(exited)return false;if(process.platform==='win32'){const r=spawnSync('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});if(r.status!==0&&!exited)throw Error('Test process cleanup failed');}else child.kill('SIGKILL');return true;}

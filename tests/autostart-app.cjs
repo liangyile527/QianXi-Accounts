@@ -4,11 +4,11 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http
 const {spawn}=require('node:child_process'),{chromium}=require('playwright'),{Store}=require('../src/main/store.cjs');
 const runtime=require('../scripts/electron-runtime.cjs'),source=!process.argv[2];
 const executable=source?runtime.resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env:runtime.childEnvironment()}):path.resolve(process.argv[2]);
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-autostart-')),report={root,executable,source,results:[],errors:[]};
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-autostart-')),report={root,executable,source,results:[],errors:[]};
 let server,child,browser,ui;const hits=[];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),pass=name=>{report.results.push(name);console.log('PASS '+name);};
 async function wait(fn,label,ms=40000){const until=Date.now()+ms;while(Date.now()<until){if(await fn())return;await sleep(60);}throw Error('Timeout '+label);}
-async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.facet.request(action,payload),{action,payload});assert.equal(r.ok,true,r.error);return r.value;}
+async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.qianxi.request(action,payload),{action,payload});assert.equal(r.ok,true,r.error);return r.value;}
 async function launch(){
  fs.rmSync(path.join(root,'DevToolsActivePort'),{force:true});
  child=spawn(executable,[...(source?[path.resolve(__dirname,'..')]:[]),'--user-data-dir='+root,'--remote-debugging-port=0','--remote-debugging-address=127.0.0.1'],{env:runtime.childEnvironment(),stdio:'ignore',windowsHide:false});
@@ -39,7 +39,7 @@ async function main(){
  for(const x of [a,b,c])await toggle(x.id,true);assert((await call('snapshot')).instances.every(x=>x.status==='stopped'));assert.equal(await ui.locator('[data-select]:checked').count(),0);pass('Real row switches persist immediately without starting instances or changing row selection');
  await call('start',{id:a.id});const pageA=await loaded(a.id,base);await pageA.evaluate(()=>localStorage.setItem('autostart-preserved','KEEP'));
  await toggle(a.id,false);await toggle(a.id,true);assert.equal((await call('snapshot')).instances.find(x=>x.id===a.id).status,'running');assert.equal(await pageA.evaluate(()=>localStorage.getItem('autostart-preserved')),'KEEP');
- const before=fs.readFileSync(store.file),invalid=await ui.evaluate(id=>window.facet.request('instance-autostart',{id,enabled:'true'}),a.id);assert.equal(invalid.ok,false);assert.deepEqual(fs.readFileSync(store.file),before);pass('Toggling a running instance preserves its live page; malformed IPC cannot change persisted data');
+ const before=fs.readFileSync(store.file),invalid=await ui.evaluate(id=>window.qianxi.request('instance-autostart',{id,enabled:'true'}),a.id);assert.equal(invalid.ok,false);assert.deepEqual(fs.readFileSync(store.file),before);pass('Toggling a running instance preserves its live page; malformed IPC cannot change persisted data');
  await close();await launch();await wait(async()=>{const s=await call('snapshot');return s.instances.find(x=>x.id===a.id).status==='running'&&s.instances.find(x=>x.id===b.id).status==='error'&&s.instances.find(x=>x.id===c.id).status==='running';},'startup pass');
  const s=await call('snapshot');assert.equal(s.instances.find(x=>x.id===d.id).status,'stopped');assert.equal(s.instances.find(x=>x.id===b.id).network.mode,'mihomo');assert(!browser.contexts().flatMap(c=>c.pages()).some(p=>p.url()===base+b.id));assert(hits.includes('/'+a.id));await loaded(c.id,base);
  assert.equal(await (await loaded(a.id,base)).evaluate(()=>localStorage.getItem('autostart-preserved')),'KEEP');pass('Normal restart automatically loads enabled real pages; a missing proxy node fails without direct fallback and later enabled instances still start; session storage survives');

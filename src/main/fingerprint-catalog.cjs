@@ -8,7 +8,7 @@ const GPUS=Object.freeze(data.gpus.map(g=>{
  return Object.freeze({brand:g.brand,model:g.model,vendor:`Google Inc. (${g.brand})`,renderer:`ANGLE (${g.brand}, ${g.model} Direct3D11 vs_5_0 ps_5_0)`});
 }));
 // Logical screen + DPR pairs. No artificial GPU manufacturer/screen restriction.
-// The pools describe Facet's desktop profiles, not population statistics.
+// The pools describe QianXi's desktop profiles, not population statistics.
 const SCREENS=Object.freeze([
  [1280,720,1],[1366,768,1],[1440,900,1],[1536,864,1.25],
  [1600,900,1],[1920,1080,1],[1920,1080,2],[1920,1200,1],

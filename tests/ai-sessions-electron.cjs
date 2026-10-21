@@ -1,7 +1,7 @@
 'use strict';
 const {app,BrowserWindow,nativeImage}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'facet-ai-sessions-'));
+const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-ai-sessions-'));
 app.setPath('userData',root);app.disableHardwareAcceleration();
 const {Controller}=require('../src/main/controller.cjs'),{ConversationStore}=require('../src/main/ai-conversation.cjs'),{Memory}=require('../src/main/ai-memory.cjs');
 const wait=async fn=>{const end=Date.now()+20000;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,30));}throw Error('Timed out');};

@@ -11,7 +11,7 @@ function showExitDialog(parent,options){
   let child,settled=false,timer;
   const finish=(response=0,checkboxChecked=false)=>{
    if(settled)return;settled=true;clearTimeout(timer);
-   ipcMain.removeListener('facet:exit-answer',answer);
+   ipcMain.removeListener('qianxi:exit-answer',answer);
    parent.removeListener('closed',cancel);
    if(child&&!child.isDestroyed())child.destroy();
    resolve({response,checkboxChecked:response===1&&checkboxChecked===true});
@@ -23,14 +23,14 @@ function showExitDialog(parent,options){
    finish(value.response,value.checkboxChecked);
   };
   try{
-   child=new BrowserWindow({parent,modal:true,show:false,width:520,height:380,useContentSize:true,frame:false,resizable:false,minimizable:false,maximizable:false,skipTaskbar:true,title:'退出千禧accounts',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'exit-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,partition:'facet-exit-confirmation'}});
+   child=new BrowserWindow({parent,modal:true,show:false,width:520,height:380,useContentSize:true,frame:false,resizable:false,minimizable:false,maximizable:false,skipTaskbar:true,title:'退出千禧accounts',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'exit-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,partition:'qianxi-exit-confirmation'}});
    child.webContents.setWindowOpenHandler(()=>({action:'deny'}));
    child.webContents.on('will-navigate',event=>event.preventDefault());
    child.webContents.session.setPermissionRequestHandler((_wc,_permission,cb)=>cb(false));
    child.webContents.session.setPermissionCheckHandler(()=>false);
    child.webContents.once('render-process-gone',cancel);
    child.once('closed',cancel);parent.once('closed',cancel);
-   ipcMain.on('facet:exit-answer',answer);
+   ipcMain.on('qianxi:exit-answer',answer);
    // Failure is cancellation, never implicit consent to stop instances.
    timer=setTimeout(cancel,10000);timer.unref?.();
    (async()=>{

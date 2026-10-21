@@ -24,7 +24,7 @@ app.whenReady().then(async()=>{try{
  // 1. 颜色分组：蓝蓝紫 无无 → 两个组 + 两个散标签，且散标签仍是列表的直接子元素
  const ids=c.workspace.data.quickLinks.map(x=>x.id);
  const tones=[[ids[0],'blue'],[ids[1],'blue'],[ids[2],'purple'],[ids[3],''],[ids[4],'']];
- await ui(`(async()=>{for(const pair of ${JSON.stringify(tones)}){const link=(await window.facet.request('snapshot')).value.quickLinks.find(x=>x.id===pair[0]);await window.facet.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:pair[1]}});}state=(await window.facet.request('snapshot')).value;render();return 1})()`);
+ await ui(`(async()=>{for(const pair of ${JSON.stringify(tones)}){const link=(await window.qianxi.request('snapshot')).value.quickLinks.find(x=>x.id===pair[0]);await window.qianxi.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:pair[1]}});}state=(await window.qianxi.request('snapshot')).value;render();return 1})()`);
  await pause(160);
  const shape=await ui(`(()=>{const list=document.querySelector('#quickSiteList'),groups=[...list.querySelectorAll(':scope>.quick-group')];return {groups:groups.length,counts:groups.map(g=>g.querySelectorAll('.quick-site').length),tints:groups.map(g=>g.className.trim()),borders:groups.map(g=>getComputedStyle(g).borderTopWidth+' '+getComputedStyle(g).borderTopStyle),bg:groups.map(g=>getComputedStyle(g).backgroundColor),direct:list.querySelectorAll(':scope>.quick-site').length,directTint:[...list.querySelectorAll(':scope>.quick-site')].map(b=>b.className)}})()`);
  assert.equal(shape.groups,2,'two coloured groups');assert.deepEqual(shape.counts,[2,1]);assert.ok(shape.tints[0].includes('qc-blue')&&shape.tints[1].includes('qc-purple'),shape.tints.join('|'));
@@ -34,7 +34,7 @@ app.whenReady().then(async()=>{try{
  ok('Consecutive same-colour labels merge into one framed group; uncoloured labels stay flat');
 
  // 2. 清空颜色不写入空字段
- await ui(`(async()=>{const link=(await window.facet.request('snapshot')).value.quickLinks.find(x=>x.id===${JSON.stringify(ids[3])});await window.facet.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:''}});state=(await window.facet.request('snapshot')).value;render();return 1})()`);
+ await ui(`(async()=>{const link=(await window.qianxi.request('snapshot')).value.quickLinks.find(x=>x.id===${JSON.stringify(ids[3])});await window.qianxi.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:''}});state=(await window.qianxi.request('snapshot')).value;render();return 1})()`);
  await pause(140);assert.equal('color' in new Workspace(root).data.quickLinks.find(x=>x.id===ids[3]),false);
  ok('Clearing a colour drops the field instead of persisting an empty value');
 
@@ -47,7 +47,7 @@ app.whenReady().then(async()=>{try{
  assert.equal(await ui('document.querySelector("#quickSiteList .quick-site.qc-red")!==null'),true,'bar shows the new colour');
  await click('[data-quick="close"]');
  await wait(()=>ui('!document.querySelector("#quickLinksDialog").open'),'manager closed');
- await ui(`(async()=>{const link=(await window.facet.request('snapshot')).value.quickLinks.find(x=>x.id===${JSON.stringify(ids[0])});await window.facet.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:'blue'}});state=(await window.facet.request('snapshot')).value;render();return 1})()`);
+ await ui(`(async()=>{const link=(await window.qianxi.request('snapshot')).value.quickLinks.find(x=>x.id===${JSON.stringify(ids[0])});await window.qianxi.request('quick-link-save',{link:{id:link.id,name:link.name,url:link.url,color:'blue'}});state=(await window.qianxi.request('snapshot')).value;render();return 1})()`);
  await wait(()=>new Workspace(root).data.quickLinks[0].color==='blue','colour restored');
  ok('Manager swatches recolour a saved shortcut in one click');
 

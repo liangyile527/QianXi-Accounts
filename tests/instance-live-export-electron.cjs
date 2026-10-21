@@ -1,8 +1,8 @@
 'use strict';
 const {app,BrowserWindow,session}=require('electron'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const root=process.env.FACET_PROBE_ROOT,url=process.env.FACET_PROBE_URL,phase=process.env.FACET_PROBE_PHASE;
+const root=process.env.QIANXI_PROBE_ROOT,url=process.env.QIANXI_PROBE_URL,phase=process.env.QIANXI_PROBE_PHASE;
 if(!root||!url||!phase)throw Error('Use runner.cjs');
-const repo=path.resolve(__dirname,'..'),dir=path.join(root,phase==='source'?'source':process.env.FACET_PROBE_PADDING||'',phase==='source'?'':process.env.FACET_PROBE_CASE);
+const repo=path.resolve(__dirname,'..'),dir=path.join(root,phase==='source'?'source':process.env.QIANXI_PROBE_PADDING||'',phase==='source'?'':process.env.QIANXI_PROBE_CASE);
 fs.mkdirSync(dir,{recursive:true});app.setPath('userData',dir);
 const {Controller}=require(path.join(repo,'src/main/controller.cjs')),{withCookies,profile,validateMetadata}=require(path.join(repo,'src/main/instance-transfer.cjs')),archive=require(path.join(repo,'src/main/instance-archive.cjs')),data=require('./instance-live-export-data.cjs');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -13,7 +13,7 @@ async function load(id){await c.start(id);await wait(()=>c.runtimes.get(id).page
 function digest(id){const files=archive.files(profile(dir,id));return crypto.createHash('sha256').update(files.map(x=>x.path+':'+crypto.createHash('sha256').update(fs.readFileSync(x.file)).digest('hex')).join('\n')).digest('hex')}
 async function dump(id,name){
  const ses=session.fromPartition('persist:arena-core-'+id),x=c.store.get(id),begin=Date.now(),item={name,sourcePID:process.pid};
- try{const result=await c.transfer.prepareExport([id],path.join(root,name+'.facetbackup'));const decoded=await archive.readArchive(path.join(root,name+'.facetbackup'),path.join(root,name+'-check'));item.written=result.status==='success';item.bytes=result.bytes;item.files=result.files;item.archiveVerified=decoded.metadata.instances[0].notes===x.notes;item.originalAutomaticallyResumed=c.runtimes.get(id).status==='running';assert(item.originalAutomaticallyResumed);assert(!fs.existsSync(path.join(dir,'instance-export.pending')));}
+ try{const result=await c.transfer.prepareExport([id],path.join(root,name+'.qianxibackup'));const decoded=await archive.readArchive(path.join(root,name+'.qianxibackup'),path.join(root,name+'-check'));item.written=result.status==='success';item.bytes=result.bytes;item.files=result.files;item.archiveVerified=decoded.metadata.instances[0].notes===x.notes;item.originalAutomaticallyResumed=c.runtimes.get(id).status==='running';assert(item.originalAutomaticallyResumed);assert(!fs.existsSync(path.join(dir,'instance-export.pending')));}
  catch(e){item.written=false;item.errorCode=e.code||null;item.error=String(e.message).replaceAll(root,'[isolated-test-root]');}
  item.durationMs=Date.now()-begin;return item;
 }
@@ -46,10 +46,10 @@ app.whenReady().then(async()=>{try{
   report.checks.push({name:'selected source instances resume with original data',passed:true});report.keepTicksAtEnd=await kwc.executeJavaScript('probeTicks');report.mainTicks=ticks;report.sameSourceProcessThroughDestinationImport=pid===process.pid;
   clearInterval(timer);await c.closeAll();save('source-result.json',report);console.log('PASS isolated source continuity and restoration');app.quit();return;
  }
- const name=process.env.FACET_PROBE_CASE;
+ const name=process.env.QIANXI_PROBE_CASE;
  let ids;
- if(phase==='import'){const draft=await c.transfer.inspect(path.join(root,(process.env.FACET_PROBE_ARCHIVE||name)+'.facetbackup'));const imported=await c.transfer.import(draft.token,[{mode:'direct',syncLocale:false}]);ids=imported.ids;save(name+'-ids.json',ids)}else ids=JSON.parse(fs.readFileSync(path.join(root,name+'-ids.json')));
+ if(phase==='import'){const draft=await c.transfer.inspect(path.join(root,(process.env.QIANXI_PROBE_ARCHIVE||name)+'.qianxibackup'));const imported=await c.transfer.import(draft.token,[{mode:'direct',syncLocale:false}]);ids=imported.ids;save(name+'-ids.json',ids)}else ids=JSON.parse(fs.readFileSync(path.join(root,name+'-ids.json')));
  const rows=[];
  for(const id of ids){const wc=await load(id),got=await wc.executeJavaScript(data.read);const cacheSummary=await wc.executeJavaScript(`(async()=>{const out=[];for(const name of await caches.keys()){const cache=await caches.open(name),keys=await cache.keys();out.push({name,entries:keys.length,paths:keys.map(x=>new URL(x.url).pathname)})}return out})()`);save(name+'-'+phase+'-storage-check.json',{...got,cacheSummary});assert.equal(got.localLength,512*1024);assert.equal(got.rows,64);for(const key of ['rowsValid','blobValid','cacheValid','opfsValid','login'])assert.equal(got[key],true,key);if(phase==='import'){assert.equal(got.session,true);const cookies=await withCookies(wc.session,async d=>(await d.sendCommand('Network.getAllCookies')).cookies);assert(cookies.some(x=>x.name==='probeCHIPS'&&x.partitionKey?.topLevelSite==='https://top.test'))}assert(c.store.get(id).notes.startsWith('Synthetic note'));rows.push({id,storageValid:true,loginValid:true,notesValid:true})}
  await c.closeAll();save(name+'-'+phase+'.json',{status:'passed',rows,processPID:process.pid});console.log('PASS '+name+' '+phase+' actual import/storage/login');app.quit();
-}catch(e){save(phase==='source'?'source-failure.json':process.env.FACET_PROBE_CASE+'-'+phase+'.json',{status:'failed',errorCode:e.code||null,error:e.message});console.error('PROBE_FAIL '+e.message);try{await c?.closeAll()}catch{}app.exit(1)}});
+}catch(e){save(phase==='source'?'source-failure.json':process.env.QIANXI_PROBE_CASE+'-'+phase+'.json',{status:'failed',errorCode:e.code||null,error:e.message});console.error('PROBE_FAIL '+e.message);try{await c?.closeAll()}catch{}app.exit(1)}});

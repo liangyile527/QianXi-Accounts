@@ -3,7 +3,7 @@
 // It tests host behavior, not the reasoning quality of a third-party model.
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'facet-ai-stop-'));
+const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-ai-stop-'));
 app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs');
 const {AIAgent}=require('../src/main/ai-agent.cjs');
@@ -49,7 +49,7 @@ app.whenReady().then(async()=>{let error;try{
    assert(!agent.run.entries.some(x=>x.kind==='tool'&&x.text.startsWith('fill：')));
    if(mode!=='abort'){
     const answer=agent.run.entries.filter(x=>x.kind==='assistant').at(-1)?.text;assert(answer?.trim());
-    if(['failure','empty','unexpected-tool','timeout'].includes(mode))assert(answer.includes('千面提供的停止说明'));
+    if(['failure','empty','unexpected-tool','timeout'].includes(mode))assert(answer.includes('千禧accounts提供的停止说明'));
     else assert(answer.includes('页面连续为空'));
     const restored=new AIAgent(c);assert(restored.run.entries.some(x=>x.kind==='assistant'&&x.text===answer));
     assert(restored.memory.turns.some(t=>t.messages.some(m=>m.role==='assistant'&&m.content===answer)));assert.equal(restored.memory.turns.length,1);

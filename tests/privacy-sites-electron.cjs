@@ -4,7 +4,7 @@
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const http=require('node:http'),https=require('node:https'),net=require('node:net'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-privacy-sites-test-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-privacy-sites-test-'));
 app.setPath('userData',root);
 app.commandLine.appendSwitch('disable-background-networking');
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');

@@ -4,8 +4,8 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),{chromium}=require('playwright'),{Store}=require('../src/main/store.cjs');
 const executable=path.resolve(process.argv[2]),version=process.argv[3]||require('../package.json').version;
-assert(path.basename(path.dirname(executable)).startsWith('FacetReminderValidation-'),'A disposable validation copy is required');
-const data=fs.mkdtempSync(path.join(os.tmpdir(),'facet-startup-update-')),results=[],errors=[];
+assert(path.basename(path.dirname(executable)).startsWith('QianXiReminderValidation-'),'A disposable validation copy is required');
+const data=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-startup-update-')),results=[],errors=[];
 let server,child,browser,ui,page,id,checks=0,mode='available',feedDelay=300,launchAt=0,firstCheckAt=0,startupCheckElapsedMs=0;
 const parts=version.split('.').map(Number),firstVersion=`${parts[0]}.${parts[1]}.${parts[2]+1}`,secondVersion=`${parts[0]}.${parts[1]}.${parts[2]+2}`;
 let offered=firstVersion;
@@ -34,10 +34,10 @@ async function main(){
   if(req.url.startsWith('/latest.yml')){checks++;if(!firstCheckAt)firstCheckAt=Date.now();if(mode==='offline'){res.writeHead(503);res.end('Unavailable');return;}
    const v=mode==='current'?version:offered,digest=Buffer.alloc(64).toString('base64');setTimeout(()=>res.end(`version: ${v}
 files:
-  - url: Facet-Fixture-${v}.exe
+  - url: QianXi-Fixture-${v}.exe
     sha512: ${digest}
     size: 128
-path: Facet-Fixture-${v}.exe
+path: QianXi-Fixture-${v}.exe
 sha512: ${digest}
 releaseDate: '2026-10-07T00:00:00Z'
 `),feedDelay);return;}
@@ -47,7 +47,7 @@ releaseDate: '2026-10-07T00:00:00Z'
  const url='http://127.0.0.1:'+server.address().port;
  fs.writeFileSync(path.join(path.dirname(executable),'resources','app-update.yml'),`provider: generic
 url: ${url}/
-updaterCacheDirName: facet-startup-validation-updater
+updaterCacheDirName: qianxi-startup-validation-updater
 `);
  const store=new Store(data),a=store.create('启动更新验证');id=a.id;store.update(id,{url:url+'/page',autoStart:true});
  const settings=path.join(data,'app-settings.json');fs.writeFileSync(settings,JSON.stringify({confirmExit:false,marker:'preserve'}));

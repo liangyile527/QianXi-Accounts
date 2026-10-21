@@ -36,7 +36,7 @@
 | `alarms` | 创建、获取、枚举、清除与实际定时事件 | 持久化，实例停止暂停、再次启动恢复；重复间隔至少 0.5 分钟；不是严格实时计时器 |
 | `privacy/proxy` | WebRTC 防护策略及实际代理路由只读查询 | 返回不可由扩展控制；set/clear 明确报错，保留千禧accounts网络配置 |
 
-原生 `offscreen` 可创建和运行。DNR（源码已修复，尚未发布）：v0.2.13～v0.2.16 不生效的根因是实例 Session 注册了诊断用 `webRequest` 监听，使 Electron 绕过扩展请求代理；诊断改为 CDP 采集后，动态规则的拦截、跳转及请求/响应改头已在真实 fetch 上验证执行（`test:extension-compat`）。Electron 加载扩展时不会启用清单中 `"enabled": true` 的静态规则集（实测 `getEnabledRulesets()` 为空）；千禧accounts在实例启动、页面加载前为每个实例按扩展包指纹补做一次（`extension-dnr-rulesets.cjs`，标记存于实例配置目录 `facet-dnr-rulesets.json`）。首次见到扩展时若其已有启用集合则保持不动；扩展更新只补启新版清单新增的默认规则集；扩展自己调用 `updateEnabledRulesets` 的选择由 Electron 跨重启保存，不被覆盖。`getMatchedRules`/调试反馈和 `responseHeaders` 条件尚未验证。扩展调试器只有在该扩展自己调用 `Network.enable` 后才收到 Network 事件；它关闭 Network 或断开时，千禧accounts恢复诊断用的小缓冲设置，不关闭采集。`nativeMessaging`、浏览器账号/同步、商店安装、所有 Chrome API/参数并未补齐。Buster 本机辅助程序通信仍受 Electron 限制。
+原生 `offscreen` 可创建和运行。DNR（源码已修复，尚未发布）：v0.2.13～v0.2.16 不生效的根因是实例 Session 注册了诊断用 `webRequest` 监听，使 Electron 绕过扩展请求代理；诊断改为 CDP 采集后，动态规则的拦截、跳转及请求/响应改头已在真实 fetch 上验证执行（`test:extension-compat`）。Electron 加载扩展时不会启用清单中 `"enabled": true` 的静态规则集（实测 `getEnabledRulesets()` 为空）；千禧accounts在实例启动、页面加载前为每个实例按扩展包指纹补做一次（`extension-dnr-rulesets.cjs`，标记存于实例配置目录 `qianxi-dnr-rulesets.json`）。首次见到扩展时若其已有启用集合则保持不动；扩展更新只补启新版清单新增的默认规则集；扩展自己调用 `updateEnabledRulesets` 的选择由 Electron 跨重启保存，不被覆盖。`getMatchedRules`/调试反馈和 `responseHeaders` 条件尚未验证。扩展调试器只有在该扩展自己调用 `Network.enable` 后才收到 Network 事件；它关闭 Network 或断开时，千禧accounts恢复诊断用的小缓冲设置，不关闭采集。`nativeMessaging`、浏览器账号/同步、商店安装、所有 Chrome API/参数并未补齐。Buster 本机辅助程序通信仍受 Electron 限制。
 
 导航只开放无 URL 登录凭据的 HTTP/HTTPS、about:blank 或本扩展页面，拒绝 file/javascript 等；截图另检查页面来源权限或真实 activeTab。导航事件过滤目前支持 hostEquals/urlContains，其他 Chrome URLFilter 字段尚未实现。会话、书签、历史和下载的字段也不是完整 Chrome 数据模型。
 
@@ -44,8 +44,8 @@
 
 - 主进程按 Session、扩展来源、托管路径和运行状态检查 IPC，网页不能直接调用控制桥。跨实例 tab/window/Cookie/debugger 操作拒绝执行。
 - 扩展创建的网页使用所属实例 Session、Mihomo、环境和 WebRTC 防护；工具栏另用无 Node 权限的隔离 Session。主实例停止时关闭其扩展浏览窗口、侧栏、通知及定时器，取消活动下载，不影响其他实例。
-- 状态文件为实际 `session.getStoragePath()` 下的 `facet-extension-state.json`，原子写入并保留 `.bak`。含扩展书签、访问历史、下载记录、关闭页、可选授权、角标及侧栏配置。损坏状态明确失败并保留原文件。
-- 已完成下载默认位于系统下载目录下 `Facet/<实例ID>/`。禁止相对路径越界、设备文件名与下载目录联接。同名并发请求预留各自路径，也避开已有 `.crdownload`。saveAs 在发起传输前打开原生保存选择，同一实例只允许一个待选择的保存框；取消不会启动下载。停止实例会取消活动下载并立即保存 USER_SHUTDOWN 状态。
+- 状态文件为实际 `session.getStoragePath()` 下的 `qianxi-extension-state.json`，原子写入并保留 `.bak`。含扩展书签、访问历史、下载记录、关闭页、可选授权、角标及侧栏配置。损坏状态明确失败并保留原文件。
+- 已完成下载默认位于系统下载目录下 `QianXi/<实例ID>/`。禁止相对路径越界、设备文件名与下载目录联接。同名并发请求预留各自路径，也避开已有 `.crdownload`。saveAs 在发起传输前打开原生保存选择，同一实例只允许一个待选择的保存框；取消不会启动下载。停止实例会取消活动下载并立即保存 USER_SHUTDOWN 状态。
 - 可选授权仅在确认后持久化；写入尚未提交就失败时恢复原内存权限，不发送授权变化事件。原子写入若已经替换文件但无法确认目录持久化，则保留实际已写入状态并报告错误，沿用 `json-storage.cjs` 的提交状态语义。
 - 重启保留书签、访问记录、完成下载及定时任务，窗口/target ID 不复用。重置环境同时清除兼容状态文件与备份；外部下载文件保留，不能把“重置网页环境”当作清空系统下载目录。
 - 状态文件含浏览信息和下载路径，按实例私有数据处理；不要直接上传、写进 Git、复制到公开诊断材料。下载记录不自动导出为系统日志。
@@ -87,7 +87,7 @@ git diff --check
 ```powershell
 # 保存新文件、取消第二次保存；实例停止自动关闭权限框。
 npm.cmd run test:extension-native -- --dialogs-only
-# 以上步骤后，还需点击“Facet 原生通知验收”。
+# 以上步骤后，还需点击“QianXi 原生通知验收”。
 npm.cmd run test:extension-native
 ```
 

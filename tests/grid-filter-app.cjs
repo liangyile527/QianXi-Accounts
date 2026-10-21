@@ -2,11 +2,11 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),{chromium}=require('playwright'),{Store}=require('../src/main/store.cjs'),runtime=require('../scripts/electron-runtime.cjs');
 const source=!process.argv[2],executable=source?runtime.resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env:runtime.childEnvironment()}):path.resolve(process.argv[2]);
-if(!source)assert(path.basename(path.dirname(executable)).startsWith('FacetGridFilterValidation-'),'Use a disposable validation copy');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-grid-filter-')),report={root,source,executable,results:[],errors:[]};let child,browser,ui,server;
+if(!source)assert(path.basename(path.dirname(executable)).startsWith('QianXiGridFilterValidation-'),'Use a disposable validation copy');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-grid-filter-')),report={root,source,executable,results:[],errors:[]};let child,browser,ui,server;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),pass=name=>{report.results.push(name);console.log('PASS '+name);};
 async function wait(fn,label,ms=40000){const until=Date.now()+ms;while(Date.now()<until){if(await fn())return;await sleep(60);}throw Error('Timeout '+label);}
-async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.facet.request(action,payload),{action,payload});assert.equal(r.ok,true,r.error);return r.value;}
+async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.qianxi.request(action,payload),{action,payload});assert.equal(r.ok,true,r.error);return r.value;}
 async function launch(){
  fs.rmSync(path.join(root,'DevToolsActivePort'),{force:true});child=spawn(executable,[...(source?[path.resolve(__dirname,'..')]:[]),'--user-data-dir='+root,'--remote-debugging-port=0','--remote-debugging-address=127.0.0.1'],{env:runtime.childEnvironment(),stdio:'ignore',windowsHide:false});
  await wait(()=>{if(child.exitCode!==null)throw Error('App exited '+child.exitCode);return fs.existsSync(path.join(root,'DevToolsActivePort'));},'launch');
@@ -22,7 +22,7 @@ async function settled(){await ui.waitForFunction(()=>!gridInFlight&&!gridFrame&
 async function main(){
  server=http.createServer((req,res)=>{if(req.url.startsWith('/latest.yml')){const version=require('../package.json').version,digest=Buffer.alloc(64).toString('base64');res.end(`version: ${version}\nfiles:\n  - url: unused.exe\n    sha512: ${digest}\n    size: 128\npath: unused.exe\nsha512: ${digest}\n`);return;}res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Grid filter live page</title><h1>Live page</h1><input id="input"><script>window.ticks=0;function tick(){window.ticks++;requestAnimationFrame(tick)}tick()</script>');});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base='http://127.0.0.1:'+server.address().port+'/',store=new Store(root),ids=[];for(let i=0;i<24;i++){const x=store.create('筛选实例 '+(i+1));store.update(x.id,{url:base+x.id});ids.push(x.id);}fs.writeFileSync(path.join(root,'app-settings.json'),JSON.stringify({confirmExit:false}));
- if(!source)fs.writeFileSync(path.join(path.dirname(executable),'resources/app-update.yml'),`provider: generic\nurl: ${base}\nupdaterCacheDirName: facet-grid-filter-validation-updater\n`);
+ if(!source)fs.writeFileSync(path.join(path.dirname(executable),'resources/app-update.yml'),`provider: generic\nurl: ${base}\nupdaterCacheDirName: qianxi-grid-filter-validation-updater\n`);
  await launch();const running=ids.filter((_id,i)=>[0,2,12,23].includes(i));for(const id of running)await call('start',{id});
  await wait(()=>browser.contexts().flatMap(c=>c.pages()).filter(p=>p.url().startsWith(base)).length===4,'live pages');const pages=browser.contexts().flatMap(c=>c.pages()).filter(p=>p.url().startsWith(base));for(const p of pages)await p.waitForFunction(()=>window.ticks>0);
  await ui.evaluate(()=>{gridPrefs.mode='live';gridPrefs.cols='auto';gridPrefs.filter='all';route('grid');});await settled();assert.equal(await ui.locator('.grid-tile').count(),24);assert.equal(await ui.locator('.grid-thumb').count(),0);

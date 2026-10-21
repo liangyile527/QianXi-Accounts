@@ -2,7 +2,7 @@
 // Separate Electron processes and temporary profiles; no production data or external STUN.
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {spawnSync}=require('node:child_process');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-webrtc-regression-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-webrtc-regression-'));
 let passed=false;
 try {
   for(const mode of ['control','guarded']) {

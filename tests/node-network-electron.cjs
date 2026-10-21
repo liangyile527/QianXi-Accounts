@@ -3,20 +3,20 @@
 // is read from an existing library at runtime; never print or retain credentials.
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const root=process.env.FACET_NETWORK_TEST_DATA||fs.mkdtempSync(path.join(os.tmpdir(),'facet-network-electron-'));
+const root=process.env.QIANXI_NETWORK_TEST_DATA||fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-network-electron-'));
 app.setPath('userData',root);
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs');
 const {NodeNetwork}=require('../src/main/node-network.cjs');
 const results=[];let win,c,server;
-const report=process.env.FACET_NETWORK_TEST_REPORT;
+const report=process.env.QIANXI_NETWORK_TEST_REPORT;
 const pass=name=>{results.push({name,passed:true});console.log('PASS '+name);};
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function wait(fn,label){for(let i=0;i<900;i++){if(await fn())return;await sleep(50);}throw Error('Timeout: '+label);}
 function externalNode(){
- if(!process.env.FACET_NETWORK_TEST_LIBRARY)return null;
- const data=JSON.parse(fs.readFileSync(process.env.FACET_NETWORK_TEST_LIBRARY,'utf8'));
- const node=data.sources.flatMap(s=>s.nodes)[Number(process.env.FACET_NETWORK_TEST_NODE_INDEX)];
+ if(!process.env.QIANXI_NETWORK_TEST_LIBRARY)return null;
+ const data=JSON.parse(fs.readFileSync(process.env.QIANXI_NETWORK_TEST_LIBRARY,'utf8'));
+ const node=data.sources.flatMap(s=>s.nodes)[Number(process.env.QIANXI_NETWORK_TEST_NODE_INDEX)];
  assert(node&&node.server&&node.type,'Selected test node unavailable');
  return {...node,name:'Network compatibility test node'};
 }
@@ -31,7 +31,7 @@ app.whenReady().then(async()=>{let failed=false;try{
  await wait(()=>ui('typeof route==="function"&&state.instances.length>0'),'UI initialization');
  const click=async selector=>{const quoted=JSON.stringify(selector);if(await ui(`!!document.querySelector(${quoted})?.closest('[hidden]')`)){await ui(`document.querySelector(${quoted}).click()`);return;}win.focus();win.webContents.focus();await ui('document.querySelector('+quoted+').scrollIntoView({block:"center",behavior:"instant"})');await sleep(80);const pos=await ui('(el=>{const r=el.getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})(document.querySelector('+quoted+'))');assert.equal(await ui('document.elementFromPoint('+pos.x+','+pos.y+').closest("button")?.id'),selector.slice(1),'Button is not visible at click position');win.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...pos});win.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...pos});};
  const selected=externalNode();
- if(process.env.FACET_NETWORK_TEST_PHASE==='restart'){
+ if(process.env.QIANXI_NETWORK_TEST_PHASE==='restart'){
   assert.equal(c.nodeNetwork.settings.dnsMode,'secure');assert.equal(c.nodeNetwork.settings.routeMode,'physical');
   await ui("route('settings')");assert.equal(await ui('document.querySelector("#nodeRouteMode").value'),'physical');
   pass('Application restart restores saved DNS and route choices in real UI');
@@ -53,7 +53,7 @@ app.whenReady().then(async()=>{let failed=false;try{
   const physical=(await c.nodeNetwork.interfaces()).filter(r=>r.physical&&r.defaultRoute).sort((a,b)=>a.metric-b.metric||a.index-b.index)[0];
   await ui('document.querySelector("#nodeRouteMode").value="interface";document.querySelector("#nodeRouteMode").dispatchEvent(new Event("change",{bubbles:true}))');
   await ui('document.querySelector("#nodeInterfaceName").value='+JSON.stringify(physical.name));await click('#nodeNetworkSave');await wait(()=>!networkBusyVia(c)&&c.nodeNetwork.settings.routeMode==='interface','manual selection saved');pass('Manual interface selection saves actual interface identity');
-  await assert.rejects(c.nodeNetwork.save({dnsMode:'secure',routeMode:'interface',interfaceName:'Facet nonexistent interface'}),/未回退/);assert.equal(c.nodeNetwork.settings.routeMode,'interface');pass('Unavailable interface refuses save and preserves prior policy');
+  await assert.rejects(c.nodeNetwork.save({dnsMode:'secure',routeMode:'interface',interfaceName:'QianXi nonexistent interface'}),/未回退/);assert.equal(c.nodeNetwork.settings.routeMode,'interface');pass('Unavailable interface refuses save and preserves prior policy');
   await c.nodeNetwork.save({dnsMode:'secure',routeMode:'physical'});c.emit();
   await ui("route('settings')");await ui('document.querySelector("#nodeNetworkCard").scrollIntoView({block:"center",behavior:"instant"})');await sleep(100);
   if(report)fs.writeFileSync(report+'.png',(await win.webContents.capturePage()).toPNG());
@@ -74,7 +74,7 @@ app.whenReady().then(async()=>{let failed=false;try{
 }catch(error){failed=true;console.error('FAIL '+(error.safeDiagnostic||String(error.message).replace(/https?:\/\/\S+/g,'[URL]').slice(0,240)));if(win&&!win.isDestroyed()){console.error('UI status: '+await win.webContents.executeJavaScript('JSON.stringify({busy:networkBusy,message:networkMessage,error:networkListError,count:networkRows.length})').catch(()=>''));if(report)fs.writeFileSync(report+'.png',(await win.webContents.capturePage()).toPNG());}}
 finally{
  try{if(c)await c.closeAll();if(win&&!win.isDestroyed())win.destroy();if(server)await new Promise(resolve=>server.close(resolve));}catch{failed=true;}
- const output={at:new Date().toISOString(),phase:process.env.FACET_NETWORK_TEST_PHASE||'first',passed:!failed,results};if(report)fs.writeFileSync(report,JSON.stringify(output,null,2));
- if(!process.env.FACET_NETWORK_TEST_DATA)console.log('Isolated test profile retained until Electron exits; use node-network-runner.cjs for cleanup');app.exit(failed?1:0);
+ const output={at:new Date().toISOString(),phase:process.env.QIANXI_NETWORK_TEST_PHASE||'first',passed:!failed,results};if(report)fs.writeFileSync(report,JSON.stringify(output,null,2));
+ if(!process.env.QIANXI_NETWORK_TEST_DATA)console.log('Isolated test profile retained until Electron exits; use node-network-runner.cjs for cleanup');app.exit(failed?1:0);
 }});
 function networkBusyVia(controller){return controller.queues.has('node-network');}

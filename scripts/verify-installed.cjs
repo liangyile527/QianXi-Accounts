@@ -7,8 +7,8 @@ const {Store}=require('../src/main/store.cjs');
 const {ExtensionCatalog}=require('../src/main/extension-catalog.cjs');
 const {childEnvironment}=require('./electron-runtime.cjs');
 const buildManifest=path.resolve(__dirname,'../release/build-manifest.json');
-const executable=path.resolve(process.argv[2]||(fs.existsSync(buildManifest)?JSON.parse(fs.readFileSync(buildManifest,'utf8')).unpackedExecutable:'release/win-unpacked/Facet.exe'));
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-installed-中文-'));
+const executable=path.resolve(process.argv[2]||(fs.existsSync(buildManifest)?JSON.parse(fs.readFileSync(buildManifest,'utf8')).unpackedExecutable:'release/win-unpacked/QianXiAccounts.exe'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-installed-中文-'));
 const results=[],errors=[];let server,proxy,child,browser,ui,inspectorUrl,proxyHits=0,geoHits=0;
 const sockets=new Set(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pass=name=>{results.push(name);console.log('PASS '+name);};
@@ -42,9 +42,9 @@ async function setIsolatedGeoEndpoint(url){
 }
 async function verifyTaskbar(){
  const native=JSON.parse((await promisify(execFile)('pwsh.exe',['-NoProfile','-File',path.join(__dirname,'../tests/window-identity-properties.ps1'),'-ProcessId',String(child.pid)],{encoding:'utf8',windowsHide:true,timeout:15000})).stdout);
- assert.equal(native.pid,child.pid);assert.equal(native.appId,'Facet.MultiInstanceBrowser');
- assert.equal(native.icon,path.join(path.dirname(executable),'resources/facet.ico')+',0');
- assert.equal(native.command,'"'+executable+'"');assert.equal(native.name,'千面 Facet');
+ assert.equal(native.pid,child.pid);assert.equal(native.appId,'com.qianxi.accounts');
+ assert.equal(native.icon,path.join(path.dirname(executable),'resources/qianxi.ico')+',0');
+ assert.equal(native.command,'"'+executable+'"');assert.equal(native.name,'千禧accounts');
  assert(native.large?.hash&&native.small?.hash);
  return native;
 }
@@ -65,7 +65,7 @@ async function instancePage(id){
 async function extensionPage(id,extensionId){
  await call('extension-open',{id,extensionId,kind:'popup'});let panel;
  await wait(()=>{panel=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().startsWith('chrome-extension://')&&p.url().endsWith('/popup.html'));return !!panel;},'packaged extension panel');
- await panel.waitForFunction(()=>!!window.__facetExtensionCompatApplied);return panel;
+ await panel.waitForFunction(()=>!!window.__qianxiExtensionCompatApplied);return panel;
 }
 async function close(){
  if(!child||child.exitCode!==null)return;
@@ -78,7 +78,7 @@ async function close(){
 async function main(){
  assert(fs.existsSync(executable),'installed executable missing');
  const resources=path.join(path.dirname(executable),'resources');
- for(const file of ['app.asar','mihomo/mihomo.exe','mihomo/LICENSE','mihomo/mihomo-source.tar.gz','process-host/facet-process-host.exe','process-host/manifest.json','facet.ico','AGENTS.md','README.md','docs/README.md','docs/PROJECT.md','docs/CURRENT-SCOPE.md','docs/AI-CONTROL-HANDOFF.md','docs/CONTROL-API.md','docs/EXTENSION-COMPATIBILITY.md','docs/FINGERPRINT-CATALOG.md','docs/DIAGNOSTICS.md'])assert(fs.existsSync(path.join(resources,file)),file+' missing');
+ for(const file of ['app.asar','mihomo/mihomo.exe','mihomo/LICENSE','mihomo/mihomo-source.tar.gz','process-host/qianxi-process-host.exe','process-host/manifest.json','qianxi.ico','AGENTS.md','README.md','docs/README.md','docs/PROJECT.md','docs/CURRENT-SCOPE.md','docs/AI-CONTROL-HANDOFF.md','docs/CONTROL-API.md','docs/EXTENSION-COMPATIBILITY.md','docs/FINGERPRINT-CATALOG.md','docs/DIAGNOSTICS.md'])assert(fs.existsSync(path.join(resources,file)),file+' missing');
  pass('Installed resources include packaged code, core, process host, icon, licenses and source archive');
  server=http.createServer((req,res)=>{if(req.url==='/geo'){geoHits++;res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({ip:'203.0.113.40',country_code:'JP',country:'Japan',timezone:{id:'Asia/Tokyo'}}));}if(req.url.startsWith('/diagnostic-reset'))return req.socket.destroy();if(req.url.startsWith('/diagnostic-status'))res.statusCode=503;res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><title>Installed live fixture</title><h1>REAL_INSTALLED_PAGE</h1><script>window.ticks=0;function tick(){window.ticks++;requestAnimationFrame(tick)}tick();</script>');});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/';
@@ -92,7 +92,7 @@ async function main(){
  const catalog=new ExtensionCatalog(root),extension=catalog.stage(extensionSource);catalog.accept(extension);catalog.setEnabled(b.id,extension.id,true);
  fs.writeFileSync(path.join(root,'workspace-tools.json'),JSON.stringify({nodes:[],ips:[],quickLinksRevision:1,quickLinks:[{id:'quick-ipip',name:'ipip.la',url:'https://ipip.la/disguise.html'},{id:'quick-arena',name:'Arena',url:'https://arena.ai/agent'},{id:'duplicate',name:'ipip.la',url:'https://ipip.la/'}]}));
  await launch();assert((await call('snapshot')).instances.every(x=>x.status==='stopped'));pass('Installed app loads real production preload/IPC and does not auto-start instances');
- const firstIcon=await verifyTaskbar();pass('Actual packaged window exposes native Facet icons and correct taskbar icon/relaunch paths');
+ const firstIcon=await verifyTaskbar();pass('Actual packaged window exposes native QianXi icons and correct taskbar icon/relaunch paths');
  assert.equal((await call('snapshot')).versions.app,require('../package.json').version);
  const beforeCatalogEnvironment=(await call('snapshot')).instances.find(x=>x.id===a.id).environment;
  const plan=await call('fingerprint-preset',{preset:'library-v1',environment:{language:'ja-JP',timezone:'Asia/Tokyo'}});
@@ -115,7 +115,7 @@ async function main(){
  await ui.waitForFunction(()=>view==='global'&&!!document.querySelector('.github-support-card'));
  const info=await ui.locator('#content').textContent();
  assert(!info.includes('独立新项目')&&!info.includes('（原 Arena Core）')&&!info.includes('明确的边界'));
- for(const text of ['支持开源项目','github.com/HEYD66/facet','隐私保护与 AI 助手','模型服务','系统加密','键盘快捷键','免责声明'])assert(info.includes(text),text+' missing');
+ for(const text of ['支持开源项目','github.com/momoqiqi-qwq/QianXi-Accounts','隐私保护与 AI 助手','模型服务','系统加密','键盘快捷键','免责声明'])assert(info.includes(text),text+' missing');
  assert.equal(await ui.locator('#content .section-intro').count(),0);
  assert(await ui.locator('[data-action="open-github"]').first().isEnabled());
  await ui.screenshot({path:path.join(root,'application-info.png')});
@@ -137,8 +137,8 @@ async function main(){
  await ui.screenshot({path:path.join(root,'embedded-devtools.png')});
  assert.equal((await call('toggle-devtools',{id:a.id})).open,false);
  pass('Packaged toolbar opens the real DevTools frontend and the control channel closes it');
- await pages[0].evaluate(()=>localStorage.setItem('facet-install-persistence','installed-check'));
- assert.equal(await pages[1].evaluate(()=>localStorage.getItem('facet-install-persistence')),null);pass('Installed browser sessions remain isolated');
+ await pages[0].evaluate(()=>localStorage.setItem('qianxi-install-persistence','installed-check'));
+ assert.equal(await pages[1].evaluate(()=>localStorage.getItem('qianxi-install-persistence')),null);pass('Installed browser sessions remain isolated');
  await ui.evaluate(()=>{gridPrefs.mode='live';route('grid');});await ui.waitForFunction(()=>view==='grid'&&!gridFrame&&!gridInFlight);
  assert.equal(await ui.locator('.grid-tile').count(),2);assert.equal(await ui.locator('.grid-thumb').count(),0);
  const before=await Promise.all(pages.map(p=>p.evaluate(()=>window.ticks)));await sleep(250);const after=await Promise.all(pages.map(p=>p.evaluate(()=>window.ticks)));assert(after.every((v,i)=>v>before[i]));
@@ -177,7 +177,7 @@ async function main(){
  const restartedPanel=await extensionPage(b.id,extension.id);
  assert((await restartedPanel.evaluate(()=>chrome.bookmarks.search('Packaged durable bookmark'))).some(x=>x.id===extra.bookmark.id));
  pass('Packaged extension durable data survives a completely new application process');
- const restarted=browser.contexts().flatMap(c=>c.pages()).filter(p=>p.url()===url);assert((await Promise.all(restarted.map(p=>p.evaluate(()=>localStorage.getItem('facet-install-persistence'))))).includes('installed-check'));
+ const restarted=browser.contexts().flatMap(c=>c.pages()).filter(p=>p.url()===url);assert((await Promise.all(restarted.map(p=>p.evaluate(()=>localStorage.getItem('qianxi-install-persistence'))))).includes('installed-check'));
  pass('Application restart retains renamed configuration, browser storage, migrated shortcuts and enabled API/CDP');
  await restartedPanel.evaluate(()=>chrome.storage.local.set({resetPackageProbe:'present'}));const beforeReset=(await call('snapshot')).instances.find(x=>x.id===b.id);
  const resetPage=await instancePage(b.id);

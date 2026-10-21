@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow,desktopCapturer}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-batch-electron-'));app.setPath('userData',root);app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-batch-electron-'));app.setPath('userData',root);app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{TARGETS}=require('../src/main/diagnostics.cjs'),{Store}=require('../src/main/store.cjs');
 let win,c,server;const proxies=[],results=[],errors=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function wait(fn,label){for(let i=0;i<4000;i++){if(await fn())return;await sleep(30);}throw Error('Timeout '+label);}

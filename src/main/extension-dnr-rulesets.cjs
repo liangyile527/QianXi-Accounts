@@ -1,10 +1,10 @@
 'use strict';
 // Electron loads unpacked MV3 extensions without enabling the static rulesets that the manifest
-// marks "enabled": true; Chrome does that on install and update. Facet applies those defaults
+// marks "enabled": true; Chrome does that on install and update. QianXi applies those defaults
 // once per package fingerprint in each instance profile. Electron persists the enabled set in the
 // profile, so later starts, and the extension's own updateEnabledRulesets choices, stay as they are.
 const fs=require('node:fs'),path=require('node:path');
-const FILE='facet-dnr-rulesets.json',TIMEOUT=10000;
+const FILE='qianxi-dnr-rulesets.json',TIMEOUT=10000;
 function defaultRulesets(manifest){
   const list=manifest?.declarative_net_request?.rule_resources;
   if(!Array.isArray(list)||!list.length)return null;

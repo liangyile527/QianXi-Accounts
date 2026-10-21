@@ -2,7 +2,7 @@
 // Real row-menu clicks and production IPC; local-only pages and temporary user data.
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-rename-test-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-rename-test-'));app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{Store}=require('../src/main/store.cjs');
 const results=[];let win,c,server;const errors=[];
 const wait=async(fn,label)=>{for(let i=0;i<250;i++){if(await fn())return;await new Promise(r=>setTimeout(r,40));}throw Error('Timeout: '+label);};

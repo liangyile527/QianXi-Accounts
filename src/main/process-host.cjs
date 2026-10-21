@@ -4,7 +4,7 @@ const {spawn,execFileSync}=require('node:child_process');
 function hostPath(){
  const root=path.resolve(__dirname,'../../resources/process-host');
  const dir=process.resourcesPath&&fs.existsSync(path.join(process.resourcesPath,'process-host'))?path.join(process.resourcesPath,'process-host'):root;
- const binary=path.join(dir,'facet-process-host.exe');
+ const binary=path.join(dir,'qianxi-process-host.exe');
  try{
   const manifest=JSON.parse(fs.readFileSync(path.join(dir,'manifest.json'),'utf8'));
   const hash=crypto.createHash('sha256').update(fs.readFileSync(binary)).digest('hex');
@@ -19,7 +19,7 @@ function spawnCore(binary,dir,config){
   const pidHeader=chunk=>{
   header+=chunk.toString('utf8');
   if(header.length>4096)header=header.slice(-4096);
-  for(;;){const end=header.indexOf('\n');if(end<0)break;const line=header.slice(0,end).trim();header=header.slice(end+1);const match=/^FACET_CORE_PID=(\d+)$/.exec(line);if(!match)continue;child.corePid=Number(match[1]);child.emit('facet-core-pid',child.corePid);child.stdout.removeListener('data',pidHeader);break;}
+  for(;;){const end=header.indexOf('\n');if(end<0)break;const line=header.slice(0,end).trim();header=header.slice(end+1);const match=/^QIANXI_CORE_PID=(\d+)$/.exec(line);if(!match)continue;child.corePid=Number(match[1]);child.emit('qianxi-core-pid',child.corePid);child.stdout.removeListener('data',pidHeader);break;}
  };
  child.stdout.on('data',pidHeader);
  child.stdin.on('error',()=>{});

@@ -24,7 +24,7 @@ function writeRuntimeEvent(row,output=activeOutput){
 }
 function installRuntimeOutput(app){
  const output=new RuntimeOutput(path.join(app.getPath('userData'),'runtime-output.json'));
- activeOutput=output;process.env.FACET_RUNTIME_OUTPUT=output.file;output.record('stdout','应用运行开始；历史调试输出保留');output.flush();
+ activeOutput=output;process.env.QIANXI_RUNTIME_OUTPUT=output.file;output.record('stdout','应用运行开始；历史调试输出保留');output.flush();
  const restores=[];
  const fatal=error=>{output.record('stderr',(error?.name||'Error')+': '+(error?.message||'未取得具体原因'));output.flush();};
  process.on('uncaughtExceptionMonitor',fatal);process.once('exit',()=>output.close());
@@ -32,5 +32,5 @@ function installRuntimeOutput(app){
  app.once('will-quit',()=>{for(const restore of restores)restore();process.removeListener('uncaughtExceptionMonitor',fatal);output.close();if(activeOutput===output)activeOutput=null;});
  return output;
 }
-function readRuntimeOutput(file=process.env.FACET_RUNTIME_OUTPUT,{limit=1000}={}){if(!file)return {rows:[],warning:'当前启动方式未接入运行输出。'};if(activeOutput?.file===file)return activeOutput.snapshot(limit);try{if(fs.statSync(file).size>MAX_FILE_BYTES)throw Error('too large');const data=JSON.parse(fs.readFileSync(file,'utf8'));if(!Array.isArray(data.rows))throw Error('format');const count=Math.max(1,Math.min(OUTPUT_LIMIT,limit));return {rows:data.rows.slice(-count).map(outputRow),warning:safeLine(data.warning||''),limit:OUTPUT_LIMIT,retained:data.rows.length,dropped:Math.max(0,Number(data.dropped)||0),omittedFromView:Math.max(0,data.rows.length-count),startedAt:data.startedAt||null,runId:data.runId||null,firstRetainedAt:data.rows[0]?.time||null,lastRetainedAt:data.rows.at(-1)?.time||null};}catch(e){return {rows:[],warning:e.code==='ENOENT'?'等待运行输出…':'运行输出暂时不可读取'};}}
+function readRuntimeOutput(file=process.env.QIANXI_RUNTIME_OUTPUT,{limit=1000}={}){if(!file)return {rows:[],warning:'当前启动方式未接入运行输出。'};if(activeOutput?.file===file)return activeOutput.snapshot(limit);try{if(fs.statSync(file).size>MAX_FILE_BYTES)throw Error('too large');const data=JSON.parse(fs.readFileSync(file,'utf8'));if(!Array.isArray(data.rows))throw Error('format');const count=Math.max(1,Math.min(OUTPUT_LIMIT,limit));return {rows:data.rows.slice(-count).map(outputRow),warning:safeLine(data.warning||''),limit:OUTPUT_LIMIT,retained:data.rows.length,dropped:Math.max(0,Number(data.dropped)||0),omittedFromView:Math.max(0,data.rows.length-count),startedAt:data.startedAt||null,runId:data.runId||null,firstRetainedAt:data.rows[0]?.time||null,lastRetainedAt:data.rows.at(-1)?.time||null};}catch(e){return {rows:[],warning:e.code==='ENOENT'?'等待运行输出…':'运行输出暂时不可读取'};}}
 module.exports={RuntimeOutput,readRuntimeOutput,safeLine,installRuntimeOutput,writeRuntimeEvent,outputFor,OUTPUT_LIMIT};

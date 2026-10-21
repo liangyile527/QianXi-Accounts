@@ -12,7 +12,7 @@ test('Custom data directories are not replaced by an automatic default-directory
 test('Source launches do not expose a working update action',async()=>{const app={isPackaged:false,commandLine:{hasSwitch:()=>false}};const updates=new Updates(app);assert.equal(updates.snapshot().supported,false);await assert.rejects(updates.check(),/源码/);});
 
 test('Startup checks once, records only displayed reminders, and preserves unrelated settings across restarts',async t=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-update-reminder-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-update-reminder-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
  fs.writeFileSync(path.join(dir,'app-settings.json'),JSON.stringify({confirmExit:false,customSetting:'preserve'}));
  const {updates,updater}=fixture({settingsDir:dir});let checks=0;updater.checkForUpdates=async()=>{checks++;updater.emit('update-available',{version:'0.2.2'});};
  await updates.checkStartup();await updates.checkStartup();assert.equal(checks,1);assert.equal(updates.snapshot().reminderVersion,'0.2.2');
@@ -23,7 +23,7 @@ test('Startup checks once, records only displayed reminders, and preserves unrel
  const newer=fixture({settingsDir:dir});newer.updater.checkForUpdates=async()=>newer.updater.emit('update-available',{version:'0.2.3'});await newer.updates.checkStartup();assert.equal(newer.updates.snapshot().reminderVersion,'0.2.3');
 });
 test('Undelivered startup reminders remain pending after restart',async t=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-update-pending-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-update-pending-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
  const first=fixture({settingsDir:dir});await first.updates.checkStartup();assert.equal(first.updates.snapshot().reminderVersion,'0.2.2');
  const next=fixture({settingsDir:dir});await next.updates.checkStartup();assert.equal(next.updates.snapshot().reminderVersion,'0.2.2');
 });
@@ -47,7 +47,7 @@ test('Release notes are normalized and periodic checks use a thirty-minute inter
  const {updates,updater}=fixture();updater.checkForUpdates=async()=>updater.emit('update-not-available',{});updates.scheduleStartupCheck();await new Promise(resolve=>setTimeout(resolve,30));assert.equal(updates.periodicTimer?._idleTimeout,UPDATE_CHECK_INTERVAL);updates.dispose();
 });
 test('Thirty-minute checks retry after errors, notify once per version across restart, and stop after disposal',async t=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-periodic-update-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-periodic-update-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
  t.mock.timers.enable({apis:['setTimeout']});
  const {updates,updater}=fixture({settingsDir:dir});let checks=0,offered='0.2.9',offline=true;
  updater.checkForUpdates=async()=>{checks++;if(offline)throw Error('offline');updater.emit('update-available',{version:offered,releaseNotes:'- 修复问题'});};

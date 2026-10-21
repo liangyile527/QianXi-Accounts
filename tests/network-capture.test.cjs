@@ -49,7 +49,7 @@ test('documents map to main and sub frames and duplicate failures are recorded o
   assert.deepEqual(log.rows.map(x=>x.steps[0].resourceType),['mainFrame','subFrame']);assert.equal(log.rows[0].steps.length,1);dispose();
 });
 
-test('arms only after Facet attaches the page debugger and follows new pages of the same session',async()=>{
+test('arms only after QianXi attaches the page debugger and follows new pages of the same session',async()=>{
   const ses=session('/profiles/d'),other=session('/profiles/other'),env=electron(),log=journal();
   const dispose=captureFailures(ses,log,()=>({instanceId:'d'}),env);
   const wc=page(10,ses,{attached:false}),foreign=page(11,other);env.create(wc);env.create(foreign);

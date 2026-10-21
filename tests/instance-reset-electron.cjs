@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http
 const {Controller}=require('../src/main/controller.cjs');
 const {installIPC}=require('../src/main/ipc.cjs');
 
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-instance-reset-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-instance-reset-'));
 app.setPath('userData',root);
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 app.commandLine.appendSwitch('disable-background-networking');

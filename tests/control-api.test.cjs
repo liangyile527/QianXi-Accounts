@@ -7,7 +7,7 @@ const path = require('node:path');
 const {ControlApi, loadSettings} = require('../src/main/control-api.cjs');
 
 function fixture() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-control-api-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-control-api-'));
   const focusEvents = [];
   const controller = {
     focusEvents,

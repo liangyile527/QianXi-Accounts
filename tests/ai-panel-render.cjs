@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
-app.disableHardwareAcceleration();const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-ai-panel-'));app.setPath('userData',root);
+app.disableHardwareAcceleration();const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-ai-panel-'));app.setPath('userData',root);
 app.whenReady().then(async()=>{let win,c;try{
  win=new BrowserWindow({width:1280,height:900,show:false,webPreferences:{offscreen:true,preload:path.join(__dirname,'../src/main/preload.cjs'),contextIsolation:true,sandbox:true}});
  c=new(require('../src/main/controller.cjs').Controller)(win,root,'');require('../src/main/ipc.cjs').installIPC(win,c);

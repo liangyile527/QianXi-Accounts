@@ -587,9 +587,9 @@ function diagnosticHistoryRows() {
 }
 function syncDiagnosticHistory() {
   const v = state.diagnostics?.historyVersion;
-  if (!v || v === diagHistoryVersion || diagHistoryLoading || !window.facet?.request) return;
+  if (!v || v === diagHistoryVersion || diagHistoryLoading || !window.qianxi?.request) return;
   diagHistoryLoading = true;
-  window.facet
+  window.qianxi
     .request("diagnostic-history")
     .then((res) => {
       if (res?.ok) {

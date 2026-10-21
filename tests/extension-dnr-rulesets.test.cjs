@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {applyDefaultRulesets,defaultRulesets,plan,FILE}=require('../src/main/extension-dnr-rulesets.cjs');
 
 const manifest=(rules)=>({manifest_version:3,declarative_net_request:{rule_resources:rules}});
-function profile(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-dnr-'));return {dir,session:{getStoragePath:()=>dir}};}
+function profile(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-dnr-'));return {dir,session:{getStoragePath:()=>dir}};}
 // Fake extension origin: executeJavaScript evaluates the generated script against a fake DNR API.
 function fakeElectron(dnr,{hang=false}={}){
   const log={windows:0,destroyed:0,urls:[],updates:[]};

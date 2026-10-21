@@ -1,8 +1,8 @@
 'use strict';
 module.exports={
- appId:'Facet.MultiInstanceBrowser',
+ appId:'com.qianxi.accounts',
  productName:'千禧accounts',
- executableName:'Facet',
+ executableName:'QianXiAccounts',
  directories:{output:'release',buildResources:'resources'},
  files:['src/**/*','!src/main/subscription-proxy.cjs','package.json','LICENSE','README.md'],
  extraResources:[
@@ -10,13 +10,13 @@ module.exports={
   {from:'README.md',to:'README.md'},
   {from:'docs',to:'docs',filter:['README.md','AI-AGENT.md','AI-CONTROL-HANDOFF.md','CONTROL-API.md','PROJECT.md','CURRENT-SCOPE.md','DIAGNOSTICS.md','EXTENSION-COMPATIBILITY.md','EXTENSIONS.md','FINGERPRINT-CATALOG.md','APPEARANCE.md','QUICK-LINKS.md','VIEWPORT-IP-BOOKMARKS.md','MEMORY-PERFORMANCE.md','UNIFIED-FAVORITES.md','RESET-ENVIRONMENT.md','releases/v0.01.md']},
   {from:'resources/mihomo',to:'mihomo',filter:['mihomo.exe','LICENSE','ARTIFACT.json','mihomo-source.tar.gz']},
-  {from:'resources/process-host',to:'process-host',filter:['facet-process-host.exe','manifest.json','ProcessHost.cs']},
-  {from:'resources/facet.ico',to:'facet.ico'},
-  {from:'resources/facet.png',to:'facet.png'}
+  {from:'resources/process-host',to:'process-host',filter:['qianxi-process-host.exe','manifest.json','ProcessHost.cs']},
+  {from:'resources/qianxi.ico',to:'qianxi.ico'},
+  {from:'resources/qianxi.png',to:'qianxi.png'}
  ],
  asar:true,
  npmRebuild:false,
- win:{target:[{target:'nsis',arch:['x64']}],icon:'resources/facet.ico'},
+ win:{target:[{target:'nsis',arch:['x64']}],icon:'resources/qianxi.ico'},
  nsis:{
   oneClick:false,
   perMachine:false,
@@ -33,5 +33,5 @@ module.exports={
   include:'build/installer.nsh',
   artifactName:'QianXi-Accounts-Setup-${version}-${arch}.${ext}'
  },
- publish:[{provider:'github',owner:'HEYD66',repo:'facet',releaseType:'release'}]
+ publish:[{provider:'github',owner:'momoqiqi-qwq',repo:'QianXi-Accounts',releaseType:'release'}]
 };

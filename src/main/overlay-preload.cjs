@@ -1,7 +1,7 @@
 "use strict";
 const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld(
-  "facetOverlay",
+  "qianxiOverlay",
   Object.freeze({
     onRender(callback) {
       ipcRenderer.on("overlay:render", (_event, data) => callback(data));

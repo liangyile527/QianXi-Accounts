@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict'),{spawn}=require('node:child_process'),{chromium}=require('playwright');
-const executable=path.resolve(process.argv[2]),data=fs.mkdtempSync(path.join(os.tmpdir(),'facet-github-update-'));
+const executable=path.resolve(process.argv[2]),data=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-github-update-'));
 const expectedVersion=process.argv[3]||require('../package.json').version,expectedStatus=process.argv[4]||'current';
 let child,browser,ui;const report={data,executable,checkMode:process.argv.includes('--startup')?'startup':'manual',passed:false,error:null};
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));

@@ -2,7 +2,7 @@
 const {app,BrowserWindow,desktopCapturer}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'arena-grid-live-stress-'));
-const count=Number(process.env.FACET_GRID_COUNT||15);
+const count=Number(process.env.QIANXI_GRID_COUNT||15);
 assert(Number.isInteger(count)&&count>=9&&count<=50,'test count: 9..50');
 app.setPath('userData',root);app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{Store}=require('../src/main/store.cjs');

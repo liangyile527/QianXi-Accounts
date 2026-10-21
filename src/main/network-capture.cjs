@@ -82,7 +82,7 @@ function captureFailures(session,journal,context,deps){
   };
   return dispose;
 }
-// Extension debugger adapters share Facet's page CDP connection. When an extension disables or
+// Extension debugger adapters share QianXi's page CDP connection. When an extension disables or
 // releases the Network domain, keep diagnostics armed with the small buffer limits instead.
 async function releaseNetwork(wc){
   if(watchers.get(wc)?.armed){await wc.debugger.sendCommand('Network.enable',{...NETWORK_PARAMS});return {};}

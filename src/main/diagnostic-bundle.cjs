@@ -25,7 +25,7 @@ function buildDiagnosticBundle(snapshot, events, runtime, now = new Date(), deta
     return {id:row.id,operation:row.operation,instanceId:row.instanceId,sourceId:row.sourceId,taskId:row.taskId,nodeName:row.nodeName,host:row.host,result:row.result,stage:error.stage,code:error.code,errorNumber:error.errorNumber,reason:error.reason,durationMs:row.durationMs};
   });
   return {
-    format: 'facet-diagnostics', version: 2, time: now.toISOString(),
+    format: 'qianxi-diagnostics', version: 2, time: now.toISOString(),
     application: { app: text(snapshot.versions?.app), electron: text(snapshot.versions?.electron), platform: os.platform(), architecture: os.arch(), osRelease: os.release() },
     nodeNetwork: { dnsMode: text(snapshot.nodeNetwork?.settings?.dnsMode), routeMode: text(snapshot.nodeNetwork?.settings?.routeMode), warning: text(snapshot.nodeNetwork?.warning) },
     instances: (snapshot.instances || []).map(x => ({
@@ -49,7 +49,7 @@ function buildDiagnosticBundle(snapshot, events, runtime, now = new Date(), deta
 async function exportDiagnosticBundle(controller, window, dialog) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const pick = await dialog.showSaveDialog(window, {
-    title: '保存问题诊断包', defaultPath: `Facet-diagnostics-${stamp}-${crypto.randomUUID().slice(0, 6)}.json`,
+    title: '保存问题诊断包', defaultPath: `QianXi-diagnostics-${stamp}-${crypto.randomUUID().slice(0, 6)}.json`,
     filters: [{ name: '问题诊断包（JSON）', extensions: ['json'] }]
   });
   if (pick.canceled || !pick.filePath || controller.disposing) return { cancelled: true };

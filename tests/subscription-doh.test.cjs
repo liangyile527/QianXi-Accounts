@@ -156,7 +156,7 @@ test('all unsafe node answers fall back to system DNS; system mode is unchanged'
   const {NodeNetwork}=require('../src/main/node-network.cjs'),{Mihomo}=require('../src/main/mihomo.cjs');
   const calls=mockDnsHttp(t,options=>options.hostname==='dns.alidns.com'?regionalReply(options,options.path.endsWith('type=A')?['198.18.2.1']:[]):{body:reply(options,options.path.endsWith('type=A')?['127.127.127.5']:[])});
   t.mock.method(dns,'lookup',async()=>[{address:'198.18.1.2',family:4}]);
-  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-unsafe-dns-'));
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-unsafe-dns-'));
   try{const network=new NodeNetwork(dir);await network.save({dnsMode:'auto',routeMode:'system'});const core=new Mihomo(path.resolve('resources/mihomo/mihomo.exe'),path.join(dir,'runtime'),null,network);
     // DoH returns non-public addresses, should auto-fallback to system DNS (no throw)
     const result=await network.prepare({server:'unsafe.node-vendor.com',type:'ss',port:8080});
@@ -176,7 +176,7 @@ test('strict mode never falls back to system DNS when DoH fails',async t=>{
   const {NodeNetwork}=require('../src/main/node-network.cjs');
   const calls=mockDnsHttp(t,options=>options.hostname==='dns.alidns.com'?regionalReply(options,options.path.endsWith('type=A')?['198.18.2.1']:[]):{body:reply(options,options.path.endsWith('type=A')?['127.127.127.5']:[])});
   t.mock.method(dns,'lookup',async()=>[{address:'198.18.1.2',family:4}]);
-  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-strict-dns-'));
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-strict-dns-'));
   try{const network=new NodeNetwork(dir);await network.save({dnsMode:'strict',routeMode:'system'});
     // Strict mode: DoH returns non-public, should throw (not fallback)
     await assert.rejects(network.prepare({server:'unsafe.node-vendor.com',type:'ss',port:8080}),/多个安全 DNS/);

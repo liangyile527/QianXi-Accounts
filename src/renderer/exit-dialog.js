@@ -6,7 +6,7 @@
  document.getElementById('exit-message').textContent=q.get('message')||'退出将停止正在运行的实例';
  document.getElementById('exit-names').textContent=q.get('names')||'运行中的实例';
  let sent=false;
- const answer=response=>{if(sent)return;sent=true;window.facetExit.answer(response,response===1&&document.getElementById('remember').checked);};
+ const answer=response=>{if(sent)return;sent=true;window.qianxiExit.answer(response,response===1&&document.getElementById('remember').checked);};
  document.getElementById('dismiss').addEventListener('click',()=>answer(0));
  document.getElementById('cancel').addEventListener('click',()=>answer(0));
  document.getElementById('confirm').addEventListener('click',()=>answer(1));

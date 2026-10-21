@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow,dialog}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'facet-diagnostic-electron-')),resume=process.argv.includes('--resume');
+const root=process.argv.find(x=>x.startsWith('--test-profile='))?.slice(15)||fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-diagnostic-electron-')),resume=process.argv.includes('--resume');
 app.setPath('userData',path.join(root,'data'));app.commandLine.appendSwitch('disable-gpu');app.on('window-all-closed',()=>{});
 const output=require('../src/main/runtime-output.cjs').installRuntimeOutput(app),{Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs');
 let win,c,server,proxy;const results=[];const wait=async(fn,label)=>{const end=Date.now()+30000;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,50));}throw Error('Timeout '+label);};
@@ -19,7 +19,7 @@ app.whenReady().then(async()=>{let exitCode=0;try{
   await c.runtimes.get(a.id).view.webContents.loadURL(url+'/fail?token=fixture-page-token').catch(()=>{});await wait(()=>c.networkTrace.rows.some(x=>x.operation==='page-load'&&x.instanceId===a.id),'page error recorded');
   await c.start(b.id);await wait(()=>proxyHits>0&&output.rows.some(x=>x.source==='core'&&x.instanceId===b.id),'actual core output');
   const config=JSON.parse(fs.readFileSync(path.join(c.dir,'core-runtime',b.id,'runtime.json'),'utf8'));assert.equal(config.dns.enable,false);assert(!config.hosts);assert.equal(config.tun.enable,false);
-  await ui('console.error("Facet diagnostic fixture error Cookie=fixture-control-cookie")');await wait(()=>output.rows.some(x=>x.source==='control'&&x.text.includes('Facet diagnostic fixture error')),'real UI console error');
+  await ui('console.error("QianXi diagnostic fixture error Cookie=fixture-control-cookie")');await wait(()=>output.rows.some(x=>x.source==='control'&&x.text.includes('QianXi diagnostic fixture error')),'real UI console error');
   pass('Real main-frame navigation failure and actual Mihomo output are collected without changing DNS, proxy or TUN');
   c.diagnostics.run([{instanceId:b.id,name:'fixture'}],'latency',1);const diagnosticTask=c.diagnostics.job.id;await wait(()=>!c.diagnostics.work,'real failed node diagnostic');
   const diagnosticRows=c.networkTrace.rows.filter(x=>x.operation==='diagnostic'&&x.taskId===diagnosticTask);assert.equal(diagnosticRows.length,2);assert(diagnosticRows.every(x=>x.instanceId===b.id&&x.nodeName==='fixture'&&x.result==='failed'));assert(diagnosticRows.some(x=>x.fallback));assert(c.diagnostics.history.list().some(x=>x.latency?.last?.ok===false));assert.equal(c.runtimes.get(b.id).status,'running');

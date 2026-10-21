@@ -1,6 +1,6 @@
 'use strict';
 const {ipcMain,Menu}=require('electron'),path=require('node:path');
-const hosts=new Map(),channel='facet:extension-host';let handlerInstalled=false;
+const hosts=new Map(),channel='qianxi:extension-host';let handlerInstalled=false;
 function sender(event){
  const worker=event.type==='service-worker',ses=worker?event.session:event.sender?.session,host=hosts.get(ses);if(!host)throw Error('扩展上下文未登记');
  const r=host.runtime;if(!['starting','running'].includes(r.status)||!r.view||r.view.webContents.isDestroyed())throw Error('所属实例已停止');
@@ -61,8 +61,8 @@ class ExtensionHost{
   this.preloads=['extension-host-preload.cjs','extension-compat-preload.cjs'].flatMap(file=>['frame','service-worker'].map(type=>runtime.session.registerPreloadScript({type,filePath:path.join(__dirname,file)})));
   this.onWorker=event=>{const worker=runtime.session.serviceWorkers.getWorkerFromVersionID(event.versionId);if(worker&&!this.workers.has(worker)){this.workers.add(worker);worker.ipc.handle(channel,invoke);}};
   runtime.session.serviceWorkers.on('running-status-changed',this.onWorker);
-  this.onDebuggerMessage=(_event,method,params)=>{if(!this.debuggerAttached||!this.debuggerNetwork||!this.debuggerWorker||this.debuggerWorker.isDestroyed()||!['Network.responseReceived','Network.dataReceived','Network.loadingFinished','Network.loadingFailed'].includes(method))return;try{this.debuggerWorker.send('facet:extension-debugger-event',{type:'event',source:{tabId:this.runtime.view.webContents.id},method,params:params||{}});}catch(error){this.controller.log(this.instanceId,'扩展调试事件转发失败：'+require('./workspace.cjs').redact(error.message),'WARN');}};
-  this.onDebuggerDetach=(_event,reason)=>{const worker=this.debuggerWorker;this.debuggerAttached=false;this.debuggerNetwork=false;this.debuggerOwner=null;this.debuggerWorker=null;if(worker&&!worker.isDestroyed())try{worker.send('facet:extension-debugger-event',{type:'detach',source:{tabId:this.runtime.view?.webContents?.id},reason});}catch{}};
+  this.onDebuggerMessage=(_event,method,params)=>{if(!this.debuggerAttached||!this.debuggerNetwork||!this.debuggerWorker||this.debuggerWorker.isDestroyed()||!['Network.responseReceived','Network.dataReceived','Network.loadingFinished','Network.loadingFailed'].includes(method))return;try{this.debuggerWorker.send('qianxi:extension-debugger-event',{type:'event',source:{tabId:this.runtime.view.webContents.id},method,params:params||{}});}catch(error){this.controller.log(this.instanceId,'扩展调试事件转发失败：'+require('./workspace.cjs').redact(error.message),'WARN');}};
+  this.onDebuggerDetach=(_event,reason)=>{const worker=this.debuggerWorker;this.debuggerAttached=false;this.debuggerNetwork=false;this.debuggerOwner=null;this.debuggerWorker=null;if(worker&&!worker.isDestroyed())try{worker.send('qianxi:extension-debugger-event',{type:'detach',source:{tabId:this.runtime.view?.webContents?.id},reason});}catch{}};
   runtime.view.webContents.debugger.on('message',this.onDebuggerMessage);
   runtime.view.webContents.debugger.on('detach',this.onDebuggerDetach);
   this.onContext=(_event,params)=>{const menu=this.buildMenu(params);if(menu){this.lastMenu=menu;menu.popup({window:controller.window,callback:()=>{if(this.lastMenu===menu)this.lastMenu=null;}});}};
@@ -84,8 +84,8 @@ class ExtensionHost{
   this.debuggerTarget(target);if(!this.debuggerAttached)return undefined;
   if(this.debuggerOwner!==extensionId||this.debuggerWorker!==worker)throw Error('只能断开当前扩展创建的调试会话');
   // The application owns the underlying CDP connection. Stop forwarding events for this
-  // extension, but keep the connection alive for Facet's environment and viewport controls.
-  // A Network domain the extension enabled is released back to Facet's diagnostics limits.
+  // extension, but keep the connection alive for QianXi's environment and viewport controls.
+  // A Network domain the extension enabled is released back to QianXi's diagnostics limits.
   if(this.debuggerNetwork)require('./network-capture.cjs').releaseNetwork(this.runtime.view.webContents).catch(()=>{});
   this.debuggerAttached=false;this.debuggerNetwork=false;this.debuggerOwner=null;this.debuggerWorker=null;return undefined;
  }
@@ -94,7 +94,7 @@ class ExtensionHost{
   if(typeof method!=='string'||!['Network.enable','Network.disable','Network.streamResourceContent','Network.getResponseBody'].includes(method))throw Error('此扩展不允许调用该调试器命令');
   if(!params||typeof params!=='object'||Array.isArray(params))throw Error('调试器命令参数无效');
   const wc=this.runtime.view.webContents;
-  // Facet diagnostics share this CDP connection; disabling Network must not stop failure capture.
+  // QianXi diagnostics share this CDP connection; disabling Network must not stop failure capture.
   if(method==='Network.disable'){this.debuggerNetwork=false;return require('./network-capture.cjs').releaseNetwork(wc);}
   const result=await wc.debugger.sendCommand(method,params);if(method==='Network.enable')this.debuggerNetwork=true;return result;
  }
@@ -112,7 +112,7 @@ class ExtensionHost{
    const tab={id:wc.id,url:wc.getURL(),title:wc.getTitle(),windowId:this.controller.window.id,active:true,incognito:false};
    const info={menuItemId,pageUrl:params.pageURL||wc.getURL(),frameUrl:params.frameURL,selectionText:params.selectionText,linkUrl:params.linkURL,srcUrl:params.srcURL,editable:!!params.isEditable,mediaType:params.mediaType==='none'?undefined:params.mediaType,frameId:0};
    const row=entry.items.get(String(menuItemId));if(row&&['checkbox','radio'].includes(row.type)){info.wasChecked=!!row.checked;info.checked=clicked?!!clicked.checked:row.type==='radio'||!row.checked;row.checked=info.checked;if(row.type==='radio'){const siblings=[...entry.items.values()].filter(x=>String(x.parentId)===String(row.parentId)),index=siblings.indexOf(row);for(const direction of [-1,1])for(let i=index+direction;siblings[i]?.type==='radio';i+=direction)siblings[i].checked=false;}}
-   recipient.send('facet:extension-menu-click',info,tab);
+   recipient.send('qianxi:extension-menu-click',info,tab);
   }catch(error){this.controller.log(this.instanceId,'扩展菜单执行失败：'+require('./workspace.cjs').redact(error.message),'WARN');}
  }
  close(){if(this.closed)return;this.closed=true;this.compat?.close();this.lastMenu?.closePopup();this.lastMenu=null;this.runtime.view?.webContents.removeListener('context-menu',this.onContext);this.runtime.view?.webContents.debugger.removeListener('message',this.onDebuggerMessage);this.runtime.view?.webContents.debugger.removeListener('detach',this.onDebuggerDetach);this.runtime.session.serviceWorkers.removeListener('running-status-changed',this.onWorker);for(const worker of this.workers)if(!worker.isDestroyed())worker.ipc.removeHandler(channel);for(const id of this.preloads)this.runtime.session.unregisterPreloadScript(id);this.menus.clear();this.debuggerOwner=null;this.debuggerWorker=null;this.debuggerAttached=false;hosts.delete(this.runtime.session);}

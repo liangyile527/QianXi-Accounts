@@ -2,9 +2,9 @@
 // Real production Electron UI and native browser views with isolated profiles.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const {_electron}=require('playwright'),{Store}=require('../src/main/store.cjs'),runtime=require('../scripts/electron-runtime.cjs');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-toast-layout-')),report={root,results:[],errors:[]};let app,ui,server;
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-toast-layout-')),report={root,results:[],errors:[]};let app,ui,server;
 const pass=name=>{report.results.push(name);console.log('PASS '+name);};
-async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.facet.request(action,payload),{action,payload});assert(r.ok,r.error);return r.value;}
+async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.qianxi.request(action,payload),{action,payload});assert(r.ok,r.error);return r.value;}
 async function geometry(){return ui.evaluate(()=>Object.fromEntries(['.body-grid','#sidebar','#workspaceHead','#content','#browserHost'].map(s=>{const e=document.querySelector(s);if(!e)return[s,null];const r=e.getBoundingClientRect();return[s,{x:r.x,y:r.y,width:r.width,height:r.height}];})));}
 async function hide(){await ui.evaluate(()=>{clearTimeout(toastTimer);document.querySelector('#toast').hidden=true;});}
 async function main(){

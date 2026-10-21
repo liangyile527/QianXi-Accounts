@@ -9,7 +9,7 @@ const {childEnvironment, exitDescription, resolveRuntime, treeDigest} = require(
 const good = () => ({status: 0, stdout: '\r\nv44.4.5\n', stderr: ''});
 const breakpoint = () => ({status: 0x80000003, stdout: '', stderr: ''});
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-launcher-test-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-launcher-test-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
   const source = path.join(root, 'project', 'dist');
   fs.mkdirSync(path.join(source, 'locales'), {recursive: true});

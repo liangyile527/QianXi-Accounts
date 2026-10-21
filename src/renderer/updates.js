@@ -5,9 +5,9 @@ const shownUpdateNotices=new Set();
 function paintUpdateNotice(){
  const u=appUpdateState,available=!!u.version&&['available','downloading','downloaded'].includes(u.status);
  const badge=document.getElementById('updateAvailable');if(badge)badge.hidden=!available;
- if(!available||!u.reminderVersion||shownUpdateNotices.has(u.reminderVersion)||openingUpdateReminder||document.visibilityState!=='visible'||typeof modal!=='undefined'&&modal||!window.facet)return;
+ if(!available||!u.reminderVersion||shownUpdateNotices.has(u.reminderVersion)||openingUpdateReminder||document.visibilityState!=='visible'||typeof modal!=='undefined'&&modal||!window.qianxi)return;
  const version=u.reminderVersion;openingUpdateReminder=true;
- window.facet.request('update-reminder-open',{version}).then(async result=>{
+ window.qianxi.request('update-reminder-open',{version}).then(async result=>{
   if(!result.ok)throw Error(result.error);
   if(result.value?.shown)shownUpdateNotices.add(version);
   if(result.value?.shown&&result.value.response===0){
@@ -35,9 +35,9 @@ function confirmUpdateInstall(){
 }
 document.addEventListener('DOMContentLoaded',()=>{
  const badge=document.createElement('button');badge.id='updateAvailable';badge.className='btn subtle update-available';badge.hidden=true;badge.type='button';badge.dataset.updateAction='view';badge.textContent='有更新';document.querySelector('.top-actions').prepend(badge);
- if(!window.facet){appUpdateState={...appUpdateState,status:'unsupported',error:'浏览器预览不能执行在线更新'};paintUpdateCard();return;}
- window.facet.onUpdate?.(acceptUpdateState);
- window.facet.request('update-status').then(result=>{if(!result.ok)throw Error(result.error);acceptUpdateState(result.value);}).catch(error=>{appUpdateState={...appUpdateState,status:'error',error:error.message};paintUpdateCard();});
+ if(!window.qianxi){appUpdateState={...appUpdateState,status:'unsupported',error:'浏览器预览不能执行在线更新'};paintUpdateCard();return;}
+ window.qianxi.onUpdate?.(acceptUpdateState);
+ window.qianxi.request('update-status').then(result=>{if(!result.ok)throw Error(result.error);acceptUpdateState(result.value);}).catch(error=>{appUpdateState={...appUpdateState,status:'error',error:error.message};paintUpdateCard();});
 });
 document.addEventListener('visibilitychange',paintUpdateNotice);
 window.addEventListener('focus',paintUpdateNotice);

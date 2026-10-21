@@ -15,7 +15,7 @@ function prepare(root=path.resolve(__dirname,'..')){
  const result=spawnSync(process.platform==='win32'?'npm.cmd':'npm',['ci','--no-audit','--no-fund'],{cwd:root,stdio:'inherit',shell:process.platform==='win32',windowsHide:true});
  if(result.error||result.status!==0)throw Error('依赖安装失败，请检查上方网络或 npm 报错后重试。');
  const remaining=missingDependencies(root);if(remaining.length)throw Error('安装后仍缺少依赖：'+remaining.join('、'));
- console.log('依赖安装完成，准备启动千面。');
+ console.log('依赖安装完成，准备启动千禧accounts。');
 }
 module.exports={prepare,missingDependencies};
 if(require.main===module)try{prepare();}catch(error){console.error(error.message);process.exitCode=1;}

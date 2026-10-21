@@ -46,7 +46,7 @@ internal static class ProcessHost {
             job=CreateJobObject(IntPtr.Zero,null);
             var limit=new ExtendedLimit(); limit.BasicLimitInformation.LimitFlags=0x2000; // KILL_ON_JOB_CLOSE
             if(job==IntPtr.Zero || !SetInformationJobObject(job,9,ref limit,(uint)Marshal.SizeOf(typeof(ExtendedLimit))) || !AssignProcessToJobObject(job,Process.GetCurrentProcess().Handle)) {
-                Console.Error.WriteLine("FACET_HOST_JOB_FAILED"); return 70;
+                Console.Error.WriteLine("QIANXI_HOST_JOB_FAILED"); return 70;
             }
             // No core may run without a live parent granting the initial lease.
             if(Console.ReadLine()!="START") return 71;
@@ -61,12 +61,12 @@ internal static class ProcessHost {
             core.OutputDataReceived+=(s,e)=>{if(e.Data!=null)Console.Out.WriteLine(e.Data);};
             core.ErrorDataReceived+=(s,e)=>{if(e.Data!=null)Console.Error.WriteLine(e.Data);};
             if(!core.Start()) return 72;
-            Console.Out.WriteLine("FACET_CORE_PID="+core.Id); Console.Out.Flush();
+            Console.Out.WriteLine("QIANXI_CORE_PID="+core.Id); Console.Out.Flush();
             core.StandardInput.Close(); core.BeginOutputReadLine(); core.BeginErrorReadLine();
             core.WaitForExit(); return core.ExitCode;
         } catch {
             // Never echo paths, node configuration or raw exceptions containing credentials.
-            Console.Error.WriteLine("FACET_HOST_START_FAILED"); return 73;
+            Console.Error.WriteLine("QIANXI_HOST_START_FAILED"); return 73;
         }
     }
 }

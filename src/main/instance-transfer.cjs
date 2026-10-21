@@ -9,7 +9,7 @@ function writePending(dir,job){
 }
 async function backupDigest(file){const hash=crypto.createHash('sha256');for await(const chunk of fs.createReadStream(file))hash.update(chunk);return hash.digest('hex');}
 async function verifyExport(job){
- const root=path.join(os.tmpdir(),'facet-export-check-'+crypto.randomUUID());
+ const root=path.join(os.tmpdir(),'qianxi-export-check-'+crypto.randomUUID());
  try{const checked=await archive.readArchive(job.destination,root);validateMetadata(checked.metadata);if(!require('node:util').isDeepStrictEqual(checked.metadata,job.metadata))throw Error('备份实例信息不一致');const digest=await backupDigest(job.destination);if(job.verifiedDigest&&digest!==job.verifiedDigest)throw Error('备份已变化，原实例保留');return digest;}
  finally{fs.rmSync(root,{recursive:true,force:true});}
 }
@@ -32,7 +32,7 @@ function cookieDetails(cookie){
  return out;
 }
 function validateMetadata(raw){
- if(raw?.format!=='facet-instance-backup'||raw.version!==1||raw.platform!==process.platform||!Array.isArray(raw.instances)||!raw.instances.length||raw.instances.length>1000)throw Error('备份格式或系统平台不兼容');
+ if(raw?.format!=='qianxi-instance-backup'||raw.version!==1||raw.platform!==process.platform||!Array.isArray(raw.instances)||!raw.instances.length||raw.instances.length>1000)throw Error('备份格式或系统平台不兼容');
  if(raw.electron!==process.versions.electron)throw Error('浏览器数据版本不一致，请在两台设备安装相同版本的千禧accounts后导入');
  const ids=new Set();return {...raw,instances:raw.instances.map(row=>{
   if(!row||typeof row.name!=='string'||!row.name.trim()||row.name.length>40||!Array.isArray(row.cookies)||row.cookies.length>200000||ids.has(row.id))throw Error('备份实例信息无效');profile('',row.id);ids.add(row.id);

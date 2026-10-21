@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http
 const {spawn}=require('node:child_process'),{chromium}=require('playwright'),yaml=require('js-yaml');
 const {Store}=require('../src/main/store.cjs'),{childEnvironment}=require('../scripts/electron-runtime.cjs');
 const assets=path.resolve(process.argv[2]),installDir=path.resolve(process.argv[3]);
-const data=fs.mkdtempSync(path.join(os.tmpdir(),'facet-update-')),exe=path.join(installDir,'FacetUpdateTest.exe');
+const data=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-update-')),exe=path.join(installDir,'QianXiUpdateTest.exe');
 const results=[],errors=[],sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let server,child,browser,ui,mode='current',fileBytes=0,progressSeen=false;
 const pass=s=>{results.push(s);console.log('PASS '+s);};
@@ -37,7 +37,7 @@ function serve(req,res){
   res.setHeader('Content-Type','application/yaml');res.end(yaml.dump(meta));return;
  }
  const name=path.basename(new URL(req.url,'http://127.0.0.1').pathname);const version=name.includes('0.2.1')?'0.2.1':'0.2.2';const file=path.join(assets,version,name);
- if(!fs.existsSync(file)||!/^Facet-Setup-0\.2\.[12]-x64\.exe(?:\.blockmap)?$/.test(name)){res.writeHead(404);res.end();return;}
+ if(!fs.existsSync(file)||!/^QianXi-Setup-0\.2\.[12]-x64\.exe(?:\.blockmap)?$/.test(name)){res.writeHead(404);res.end();return;}
  const bytes=fs.readFileSync(file);let start=0,end=bytes.length-1;
  if(req.headers.range){const m=/^bytes=(\d+)-(\d*)$/.exec(req.headers.range);if(!m){res.writeHead(416);res.end();return;}start=Number(m[1]);end=m[2]?Number(m[2]):end;res.writeHead(206,{'Content-Range':`bytes ${start}-${end}/${bytes.length}`,'Content-Length':end-start+1});}
  else res.writeHead(200,{'Content-Length':bytes.length});
@@ -46,7 +46,7 @@ function serve(req,res){
 async function main(){
  if(fs.existsSync(installDir))throw Error('Validation install target already exists');
  server=http.createServer(serve);await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(34279,'127.0.0.1',resolve);});
- await run(path.join(assets,'0.2.1','Facet-Setup-0.2.1-x64.exe'),['/S','/currentuser','/D='+installDir]);
+ await run(path.join(assets,'0.2.1','QianXi-Setup-0.2.1-x64.exe'),['/S','/currentuser','/D='+installDir]);
  await wait(()=>fs.existsSync(exe),'bootstrap install');
  const store=new Store(data),a=store.create('更新前实例');store.update(a.id,{url:'http://127.0.0.1:34279/page'});const marker=path.join(data,'preserve.marker');fs.writeFileSync(marker,'real-upgrade-validation');const before=hash(marker);
  await launch('0.2.1');pass('Real bootstrap NSIS install loads the application update UI');
@@ -68,7 +68,7 @@ async function main(){
  await ui.locator('#updateInstall').click();await ui.waitForFunction(()=>modal?.type==='update-install');await ui.locator('#modal [data-update-action="install"]').click();await wait(()=>child.exitCode!==null,'confirmed update exits old app');ui=null;browser=null;
  const targetHash=hash(path.join(assets,'0.2.2','win-unpacked','resources','app.asar'));
  await wait(()=>fs.existsSync(path.join(installDir,'resources','app.asar'))&&hash(path.join(installDir,'resources','app.asar'))===targetHash,'real NSIS upgrade',90000);
- const targetExeHash=hash(path.join(assets,'0.2.2','win-unpacked','FacetUpdateTest.exe'));
+ const targetExeHash=hash(path.join(assets,'0.2.2','win-unpacked','QianXiUpdateTest.exe'));
  await wait(()=>fs.existsSync(exe)&&hash(exe)===targetExeHash,'new executable');
  assert.equal(hash(marker),before);await launch('0.2.2');assert.equal((await call('snapshot')).instances[0].name,'更新后应保留');assert.equal((await call('snapshot')).instances[0].status,'stopped');
  await call('start',{id:a.id});await wait(async()=>(await call('snapshot')).instances[0].title==='Real upgrade session','upgraded browser load');page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().endsWith('/page'));assert.equal(await page.evaluate(()=>localStorage.getItem('upgrade-persistence')),'test-marker');assert((await page.evaluate(()=>document.cookie)).includes('upgrade_marker=test'));pass('Confirmed online NSIS upgrade retains configuration, cookies and localStorage across versions');

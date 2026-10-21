@@ -1,4 +1,4 @@
-package com.facet.browser.prototype;
+package com.qianxi.browser.prototype;
 import org.junit.Test;
 import org.json.*;
 import static org.junit.Assert.*;

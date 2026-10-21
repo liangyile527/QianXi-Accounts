@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('fs'),path=require('path'),os=require('os'),http=require('http'),assert=require('assert/strict');
-const resume=process.argv.find(x=>x.startsWith('--resume='))?.slice(9);const root=resume||fs.mkdtempSync(path.join(os.tmpdir(),'facet-reset-audit-'));app.setPath('userData',root);app.on('window-all-closed',()=>{});
+const resume=process.argv.find(x=>x.startsWith('--resume='))?.slice(9);const root=resume||fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-reset-audit-'));app.setPath('userData',root);app.on('window-all-closed',()=>{});
 const {Controller}=require('../src/main/controller.cjs');let c,w,server;const report={root,checks:[]};
 const wait=async f=>{for(let i=0;i<200;i++){if(await f())return;await new Promise(r=>setTimeout(r,50));}throw Error('timeout');};
 setTimeout(()=>app.exit(2),90000).unref();

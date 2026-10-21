@@ -1,8 +1,8 @@
 'use strict';
 const {app,BrowserWindow,session,dialog}=require('electron'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const root=process.env.FACET_EXPORT_DELETE_ROOT,phase=process.env.FACET_EXPORT_DELETE_PHASE,url=process.env.FACET_EXPORT_DELETE_URL;
+const root=process.env.QIANXI_EXPORT_DELETE_ROOT,phase=process.env.QIANXI_EXPORT_DELETE_PHASE,url=process.env.QIANXI_EXPORT_DELETE_URL;
 if(!root||!phase||!url)throw Error('Use export-delete runner');
-const source=path.join(root,'source'),dir=['source','failure','success','retry-corrupt'].includes(phase)?source:path.join(root,'destination'),backup=path.join(root,'exports','batch.facetbackup');fs.mkdirSync(dir,{recursive:true});app.setPath('userData',dir);
+const source=path.join(root,'source'),dir=['source','failure','success','retry-corrupt'].includes(phase)?source:path.join(root,'destination'),backup=path.join(root,'exports','batch.qianxibackup');fs.mkdirSync(dir,{recursive:true});app.setPath('userData',dir);
 const {Store}=require('../src/main/store.cjs'),{Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{finalizePending}=require('../src/main/instance-transfer.cjs');
 const wait=async fn=>{for(let i=0;i<250;i++){if(await fn())return;await new Promise(r=>setTimeout(r,50));}throw Error('Timed out');};
 let c;setTimeout(()=>app.exit(2),120000).unref();

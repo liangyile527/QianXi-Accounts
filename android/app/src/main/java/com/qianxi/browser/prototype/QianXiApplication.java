@@ -1,9 +1,9 @@
-package com.facet.browser.prototype;
+package com.qianxi.browser.prototype;
 
 import android.app.Application;
 import android.webkit.WebView;
 
-public class FacetApplication extends Application {
+public class QianXiApplication extends Application {
     @Override public void onCreate() {
         super.onCreate();
         String process = Application.getProcessName();

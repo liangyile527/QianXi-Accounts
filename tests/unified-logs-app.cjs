@@ -3,12 +3,12 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const {_electron}=require('playwright'),{Store}=require('../src/main/store.cjs'),{RuntimeOutput}=require('../src/main/runtime-output.cjs'),runtime=require('../scripts/electron-runtime.cjs');
 const source=!process.argv[2],executable=source?runtime.resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env:runtime.childEnvironment()}):path.resolve(process.argv[2]);
-if(!source)assert(path.basename(path.dirname(executable)).startsWith('FacetUnifiedLogsValidation-'),'Use a disposable full validation copy');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-unified-logs-')),report={root,source,executable,results:[],errors:[]};let app,ui,server,output;
+if(!source)assert(path.basename(path.dirname(executable)).startsWith('QianXiUnifiedLogsValidation-'),'Use a disposable full validation copy');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-unified-logs-')),report={root,source,executable,results:[],errors:[]};let app,ui,server,output;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),pass=name=>{report.results.push(name);console.log('PASS '+name);};
-async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.facet.request(action,payload),{action,payload});assert(r.ok,r.error);return r.value;}
+async function call(action,payload={}){const r=await ui.evaluate(({action,payload})=>window.qianxi.request(action,payload),{action,payload});assert(r.ok,r.error);return r.value;}
 async function launch(){
- const env=runtime.childEnvironment();if(source){output=new RuntimeOutput(path.join(root,'runtime-output.json'));output.flush();env.FACET_RUNTIME_OUTPUT=output.file;}
+ const env=runtime.childEnvironment();if(source){output=new RuntimeOutput(path.join(root,'runtime-output.json'));output.flush();env.QIANXI_RUNTIME_OUTPUT=output.file;}
  app=await _electron.launch({executablePath:executable,args:[...(source?[path.resolve(__dirname,'..')]:[]),'--user-data-dir='+root],env,timeout:40000});
  if(source){app.process().stdout.on('data',d=>output.write('stdout',d));app.process().stderr.on('data',d=>output.write('stderr',d));}
  ui=await app.firstWindow();await ui.waitForFunction(()=>typeof route==='function'&&state.instances.length===1);if(!source)assert(ui.url().includes('app.asar'));
@@ -17,7 +17,7 @@ async function close(){if(!app)return;await app.evaluate(({BrowserWindow})=>Brow
 async function writeDebug(label){await app.evaluate((_electron,label)=>{console.log(label+' stdout');console.error(label+' stderr');},label);}
 async function main(){
  server=http.createServer((_req,res)=>{const digest=Buffer.alloc(64).toString('base64');res.end(`version: ${require('../package.json').version}\nfiles:\n  - url: unused.exe\n    sha512: ${digest}\n    size: 128\npath: unused.exe\nsha512: ${digest}\n`);});await new Promise(r=>server.listen(0,'127.0.0.1',r));
- if(!source)fs.writeFileSync(path.join(path.dirname(executable),'resources/app-update.yml'),`provider: generic\nurl: http://127.0.0.1:${server.address().port}\nupdaterCacheDirName: facet-unified-logs-test-updater\n`);
+ if(!source)fs.writeFileSync(path.join(path.dirname(executable),'resources/app-update.yml'),`provider: generic\nurl: http://127.0.0.1:${server.address().port}\nupdaterCacheDirName: qianxi-unified-logs-test-updater\n`);
  const store=new Store(root),instance=store.create('日志验证实例');store.update(instance.id,{url:`http://127.0.0.1:${server.address().port}/page`});fs.writeFileSync(path.join(root,'app-settings.json'),JSON.stringify({confirmExit:false}));
  await launch();await ui.evaluate(()=>route('global-logs'));
  assert.equal(await ui.locator('#sidebar [data-view="global-logs"]').count(),1);assert.equal(await ui.locator('#sidebar [data-view="runtime-output"]').count(),0);assert.equal(await ui.locator('[data-log-tab]').count(),2);assert.equal(await ui.locator('[data-work="export-logs"]').count(),1);
@@ -38,7 +38,7 @@ async function main(){
  try{
   assert.equal(await ui.locator('[data-work="export-diagnostics"]').count(),1);
   await ui.locator('[data-work="export-diagnostics"]').click();await ui.waitForFunction(()=>!document.querySelector('[data-work="export-diagnostics"]').disabled);
-  const bundle=JSON.parse(fs.readFileSync(bundleFile,'utf8'));assert.equal(bundle.format,'facet-diagnostics');assert(bundle.instances.some(x=>x.id===instance.id));assert(bundle.events.some(x=>x.text.includes('实例已停止')));assert(bundle.debug.rows.some(x=>x.text.includes('LIVE_LOG_A stdout')));assert(bundle.debug.rows.some(x=>x.text.includes('LIVE_LOG_B stderr')));assert(!JSON.stringify(bundle).includes('ephemeral-test-value'));
+  const bundle=JSON.parse(fs.readFileSync(bundleFile,'utf8'));assert.equal(bundle.format,'qianxi-diagnostics');assert(bundle.instances.some(x=>x.id===instance.id));assert(bundle.events.some(x=>x.text.includes('实例已停止')));assert(bundle.debug.rows.some(x=>x.text.includes('LIVE_LOG_A stdout')));assert(bundle.debug.rows.some(x=>x.text.includes('LIVE_LOG_B stderr')));assert(!JSON.stringify(bundle).includes('ephemeral-test-value'));
   await ui.locator('[data-log-tab="debug"]').click();assert.equal(await ui.locator('.system-log-toolbar [data-work="export-diagnostics"]').count(),0);assert.equal(await ui.locator('.subscription-actions [data-work="export-diagnostics"]').count(),1);
   const before=fs.readFileSync(bundleFile);await app.evaluate(({dialog})=>{dialog.showSaveDialog=async()=>({canceled:true});});await ui.locator('[data-work="export-diagnostics"]').click();await ui.waitForFunction(()=>!document.querySelector('[data-work="export-diagnostics"]').disabled);assert.deepEqual(fs.readFileSync(bundleFile),before);
   await app.evaluate(({dialog},file)=>{dialog.showSaveDialog=async()=>({canceled:false,filePath:file});},root);
@@ -62,7 +62,7 @@ async function main(){
  if(!source){
   // Observe and forward the real OS browser request; do not replace its behavior or create an Issue.
   await app.evaluate(({shell})=>{global.unifiedLogsOpenExternal=shell.openExternal;shell.openExternal=async function(url,...args){const result=await global.unifiedLogsOpenExternal.call(this,url,...args);global.unifiedLogsFeedbackResult={url,accepted:true};return result;};});
-  try{await ui.locator('[data-work="feedback"]').click();await ui.waitForFunction(()=>!document.querySelector('[data-work="feedback"]').disabled);const result=await app.evaluate(()=>global.unifiedLogsFeedbackResult);assert.deepEqual(result,{url:'https://github.com/HEYD66/facet/issues',accepted:true});pass('Feedback click reaches real packaged IPC and OS openExternal successfully with the fixed repository Issues URL');}
+  try{await ui.locator('[data-work="feedback"]').click();await ui.waitForFunction(()=>!document.querySelector('[data-work="feedback"]').disabled);const result=await app.evaluate(()=>global.unifiedLogsFeedbackResult);assert.deepEqual(result,{url:'https://github.com/momoqiqi-qwq/QianXi-Accounts/issues',accepted:true});pass('Feedback click reaches real packaged IPC and OS openExternal successfully with the fixed repository Issues URL');}
   finally{await app.evaluate(({shell})=>{shell.openExternal=global.unifiedLogsOpenExternal;delete global.unifiedLogsOpenExternal;delete global.unifiedLogsFeedbackResult;});}
  }
  await close();

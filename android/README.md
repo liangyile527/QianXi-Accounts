@@ -1,4 +1,4 @@
-# 千面 Android 架构验证版
+# 千禧accounts Android 架构验证版
 
 ## 交接入口
 
@@ -7,7 +7,7 @@
 - 交接压缩包中的 `先读我.md` 为独立入口；`verification/` 保存本阶段报告，`artifacts/` 保存 APK。压缩包不包含用户数据或签名私钥。
 - 以下历史验收路径是原开发机上的位置；接手时以交接包内的报告为准，项目目录可以迁移。
 
-当前版本为 `0.2.0-prototype`（ARM64 调试 APK）。本目录为独立安卓客户端原型，不复用 Electron 窗口。包名 `com.facet.browser.prototype`，与桌面资料分离。当前 APK 使用调试签名，尚未作为正式版本发布。
+当前版本为 `0.2.0-prototype`（ARM64 调试 APK）。本目录为独立安卓客户端原型，不复用 Electron 窗口。包名 `com.qianxi.browser.prototype`，与桌面资料分离。当前 APK 使用调试签名，尚未作为正式版本发布。
 
 ## 当前实现
 
@@ -36,7 +36,7 @@
 
 构建前 `setup-core.cjs` 核对官方 Android ARM64 发行文件与源码哈希，准备 APK 内置可执行文件和 GPL 附件；不编译或改写 Mihomo 内核。
 
-产物：`android/app/build/outputs/apk/debug/app-debug.apk`。内核通过 APK 原生库目录安装为 `libfacet_mihomo.so`，不执行应用可写目录中的下载程序。APK 内附 `assets/mihomo/LICENSE`、`ARTIFACT.json` 和对应版本源码 `source.tgz`。`android/tests/verify-apk.ps1` 对最终 APK 中的这四份资源逐一核对哈希。
+产物：`android/app/build/outputs/apk/debug/app-debug.apk`。内核通过 APK 原生库目录安装为 `libqianxi_mihomo.so`，不执行应用可写目录中的下载程序。APK 内附 `assets/mihomo/LICENSE`、`ARTIFACT.json` 和对应版本源码 `source.tgz`。`android/tests/verify-apk.ps1` 对最终 APK 中的这四份资源逐一核对哈希。
 
 安装：`adb install -r <APK绝对路径>`。小米等设备可能需要在手机上确认 USB 安装；安装失败不等于已安装。不要通过自动修改手机安全设置绕过确认。
 
@@ -49,7 +49,7 @@ node android/tests/core-device.cjs
 & .\android\tests\verify-apk.ps1
 ```
 
-必须先安装本原型并解锁手机。输入辅助工具使用现有 SDK 的 UiAutomator，在本原型输入框中执行无障碍文本填写，不改变手机输入法；它不会打进产品 APK。多个 ADB 设备时以环境变量 `FACET_DEVICE` 精确指定；可用 `FACET_ADB` 指定 ADB 路径。脚本直接连接 WebView 的页面 CDP，不要求系统 WebView 支持完整桌面浏览器调试接口。脚本只控制本原型和自行创建的本机测试页面，用临时 USB 端口映射连接两个本机代理和直连源站：
+必须先安装本原型并解锁手机。输入辅助工具使用现有 SDK 的 UiAutomator，在本原型输入框中执行无障碍文本填写，不改变手机输入法；它不会打进产品 APK。多个 ADB 设备时以环境变量 `QIANXI_DEVICE` 精确指定；可用 `QIANXI_ADB` 指定 ADB 路径。脚本直接连接 WebView 的页面 CDP，不要求系统 WebView 支持完整桌面浏览器调试接口。脚本只控制本原型和自行创建的本机测试页面，用临时 USB 端口映射连接两个本机代理和直连源站：
 
 1. 两实例实际经过不同代理，访问同源网页。
 2. Cookie、localStorage 不串用。
@@ -63,8 +63,8 @@ node android/tests/core-device.cjs
 
 - `assembleDebug`、10 项 JVM 单元测试、Android Lint 通过；Lint 仍有文案国际化、旧 API 等告警。
 - 真机内核专项 8 项通过：应用沙箱中的真实 HTTP 转发、控制端口鉴权、关闭后立即重开、双独立内核（含真实 Shadowsocks 加密链路）、重启恢复、两种订阅下载网络、取消后不入库、异常内核退出阻止加载且不影响另一实例。
-- 原有双实例/手动代理/数据隔离/重启/坏代理不回退的 5 项真机回归也通过。基础回归报告：`C:\Users\24719\AppData\Local\Temp\facet-android-test-9bt8Qv\report.json`。
-- 内核专项报告：`C:\Users\24719\AppData\Local\Temp\facet-android-test-M2oORF\report.json`。测试使用本机可控上游和临时凭据，结束后恢复原节点库及偏好，不把测试节点留给用户。
+- 原有双实例/手动代理/数据隔离/重启/坏代理不回退的 5 项真机回归也通过。基础回归报告：`C:\Users\24719\AppData\Local\Temp\qianxi-android-test-9bt8Qv\report.json`。
+- 内核专项报告：`C:\Users\24719\AppData\Local\Temp\qianxi-android-test-M2oORF\report.json`。测试使用本机可控上游和临时凭据，结束后恢复原节点库及偏好，不把测试节点留给用户。
 - 最终 APK 为 0.2.0-prototype，SHA256 `36B42AB74D35297C968F8CA4965DEC3255C1A0FD48EDBBF0B918E34143FADD97`。APK v2 签名、内置内核与 GPL 附件哈希均通过校验。
 - 已验证 release 合并清单不含调试接收器。正式 release 签名、Android 其他版本、其他 ABI 和公网机场节点矩阵尚未验收。
 - “系统网络”下载指不使用实例代理的直连请求，手机 VPN/TUN 仍可接管；不额外采用 WiFi HTTP 代理。取消在进入保存阶段前阻止入库，已发出的下载连接可能继续到返回或超时。
@@ -73,7 +73,7 @@ node android/tests/core-device.cjs
 
 已连接 Android 12 / ARM64 真机，系统 WebView 99.0.4844.88。APK 构建、APK v2 签名校验、安装及 Android Lint 通过（仍有硬编码中文文案、较旧依赖等告警）。首次 USB 安装被系统拒绝，用户允许后成功安装。
 
-真机完整验收 5 项通过：不同代理真实请求、同源 Cookie/localStorage 隔离、强制停止后独立恢复、坏代理失败且直连源站零请求、明确选择系统网络后直连成功。报告 `C:\Users\24719\AppData\Local\Temp\facet-android-test-aHI6ri\report.json`，首页截图同目录 `prototype.png`，均为本机验收产物，不随应用发布。
+真机完整验收 5 项通过：不同代理真实请求、同源 Cookie/localStorage 隔离、强制停止后独立恢复、坏代理失败且直连源站零请求、明确选择系统网络后直连成功。报告 `C:\Users\24719\AppData\Local\Temp\qianxi-android-test-aHI6ri\report.json`，首页截图同目录 `prototype.png`，均为本机验收产物，不随应用发布。
 
 DOM storage 异步写盘，测试在写入后等待 6.5 秒再强制停止；首次立即强停测试曾丢失刚写入的 localStorage。当前不能保证写入后瞬间断电/强杀无丢失。每次测试使用新测试域名，避免上次运行的 Cookie 影响结果。最终两个实例的测试代理均清空，最近网址恢复为 `https://example.com/`。
 
@@ -89,7 +89,7 @@ DOM storage 异步写盘，测试在写入后等待 6.5 秒再强制停止；首
 
 ## 回滚
 
-0.1 前检查点 `5f917ce`；接入 Android 内核前检查点 `073ee2f`。本目录与桌面运行数据独立；撤销对应 Android 提交可恢复源码。0.2 开始前的旧 APK 为 `android/build/rollback/Facet-Android-0.1.0.apk`，手机原型完整数据备份为同目录 `data-before-0.2.0.tar`（14,602,240 字节，可能含登录资料，不应上传）。备份只保存，未覆盖恢复。旧版不识别新节点模式，降级前必须明确停用新节点并核对旧版手动代理设置，不能在代理运行时直接降级后继续浏览。卸载包名 `com.facet.browser.prototype` 会清除原型自己的数据，先确认需要保留的资料。桌面未提交的 toString 修改和订阅代理草稿应原样保留。
+0.1 前检查点 `5f917ce`；接入 Android 内核前检查点 `073ee2f`。本目录与桌面运行数据独立；撤销对应 Android 提交可恢复源码。0.2 开始前的旧 APK 为 `android/build/rollback/QianXi-Android-0.1.0.apk`，手机原型完整数据备份为同目录 `data-before-0.2.0.tar`（14,602,240 字节，可能含登录资料，不应上传）。备份只保存，未覆盖恢复。旧版不识别新节点模式，降级前必须明确停用新节点并核对旧版手动代理设置，不能在代理运行时直接降级后继续浏览。卸载包名 `com.qianxi.browser.prototype` 会清除原型自己的数据，先确认需要保留的资料。桌面未提交的 toString 修改和订阅代理草稿应原样保留。
 
 ## 官方依据
 

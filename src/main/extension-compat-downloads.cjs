@@ -15,7 +15,7 @@ class CompatDownloads{
   request.captured=true;clearTimeout(request.timer);
   const id=++this.c.state.data.downloadSerial,row={id,url:request.url,finalUrl:item.getURL(),filename:'',mime:item.getMimeType(),startTime:Date.now(),state:'in_progress',paused:false,canResume:false,bytesReceived:0,totalBytes:item.getTotalBytes(),fileSize:-1,exists:false,incognito:false,byExtensionId:request.ctx.id,byExtensionName:request.ctx.manifest.name};
   let reservedPath;const previousRows=[...this.c.state.data.downloads];try{
-   const base=path.join(app.getPath('downloads'),'Facet',this.c.host.instanceId),chosen=request.destination||unique(destination(base,request.options.filename||item.getFilename()),this.reserved);
+   const base=path.join(app.getPath('downloads'),'QianXi',this.c.host.instanceId),chosen=request.destination||unique(destination(base,request.options.filename||item.getFilename()),this.reserved);
    if(this.closed||request.wc.isDestroyed()){item.cancel();request.reject(Error('实例已停止'));return;}
    const chosenKey=fileKey(chosen);if(this.reserved.has(chosenKey))throw Error('此保存位置已有进行中的下载');reservedPath=chosenKey;this.reserved.add(reservedPath);
    item.setSavePath(chosen);row.filename=chosen;this.c.state.data.downloads.unshift(row);this.c.state.data.downloads=this.c.state.data.downloads.slice(0,200);this.active.set(id,item);
@@ -34,7 +34,7 @@ class CompatDownloads{
    if(options.filename)relativeFile(options.filename);if(options.conflictAction&&options.conflictAction!=='uniquify')throw Error('当前下载仅支持 uniquify，不覆盖原文件');if(options.method&&options.method!=='GET'||options.body!==undefined)throw Error('当前下载仅支持 GET');
    if(options.headers&&(!Array.isArray(options.headers)||options.headers.length>30||options.headers.some(h=>typeof h.name!=='string'||typeof h.value!=='string'||/[\r\n]/.test(h.name+h.value))))throw Error('下载请求头无效');
    const wc=ctx.wc||this.c.tabs.get().wc;if(wc.isDestroyed())throw Error('下载来源已关闭');this.pending++;try{
-    let chosen;if(options.saveAs){if(this.saveDialog)throw Error('已有扩展下载等待选择保存位置');this.saveDialog=true;let answer;try{const base=path.join(app.getPath('downloads'),'Facet',this.c.host.instanceId);answer=await dialog.showSaveDialog(this.c.host.controller.window,{title:'保存扩展下载',defaultPath:unique(destination(base,options.filename||'extension-download'),this.reserved),properties:['dontAddToRecent']});}finally{this.saveDialog=false;}if(answer.canceled)throw Error('用户取消下载');if(typeof answer.filePath!=='string'||!path.isAbsolute(answer.filePath))throw Error('保存位置无效');chosen=answer.filePath;}
+    let chosen;if(options.saveAs){if(this.saveDialog)throw Error('已有扩展下载等待选择保存位置');this.saveDialog=true;let answer;try{const base=path.join(app.getPath('downloads'),'QianXi',this.c.host.instanceId);answer=await dialog.showSaveDialog(this.c.host.controller.window,{title:'保存扩展下载',defaultPath:unique(destination(base,options.filename||'extension-download'),this.reserved),properties:['dontAddToRecent']});}finally{this.saveDialog=false;}if(answer.canceled)throw Error('用户取消下载');if(typeof answer.filePath!=='string'||!path.isAbsolute(answer.filePath))throw Error('保存位置无效');chosen=answer.filePath;}
     if(this.closed||wc.isDestroyed())throw Error('实例已停止或下载来源已关闭');if(chosen&&this.reserved.has(fileKey(chosen)))throw Error('此保存位置已有进行中的下载');
     return await new Promise((resolve,reject)=>{this.queue.push({ctx,options,url,destination:chosen,wc,resolve,reject});this.next();});
    }finally{this.pending--;}

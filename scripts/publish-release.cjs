@@ -13,16 +13,16 @@ function releaseAssets(){
 function main(){
  const assets=releaseAssets();if(run('git',['status','--porcelain']))throw Error('请先提交代码，再发布版本');
  const sha=run('git',['rev-parse','HEAD']);const remote=run('git',['ls-remote','origin','refs/heads/main']).split(/\s+/)[0];if(remote!==sha)throw Error('请先将当前提交推送到 GitHub main');
- const tag='v'+pkg.version;const notes=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'facet-release-')),'notes.md');
+ const tag='v'+pkg.version;const notes=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-release-')),'notes.md');
  if(process.argv[2])fs.copyFileSync(path.resolve(process.argv[2]),notes);
- else if(pkg.version==='0.2.1')fs.writeFileSync(notes,'# 千面 Facet '+pkg.version+'\n\nWindows x64 安装包。首次接入在线更新的版本需要手动安装一次。\n\n- 应用信息提供检查更新、下载进度和确认退出安装。\n- 更新前正常停止实例，保留配置、登录资料和扩展。\n- 删除应用信息中的旧介绍与边界卡片。\n\n安装包未签名。当前开发环境建议安装到默认 C 盘目录。\n');
+ else if(pkg.version==='0.2.1')fs.writeFileSync(notes,'# 千禧accounts '+pkg.version+'\n\nWindows x64 安装包。首次接入在线更新的版本需要手动安装一次。\n\n- 应用信息提供检查更新、下载进度和确认退出安装。\n- 更新前正常停止实例，保留配置、登录资料和扩展。\n- 删除应用信息中的旧介绍与边界卡片。\n\n安装包未签名。当前开发环境建议安装到默认 C 盘目录。\n');
  else throw Error('后续发布请提供更新说明：npm run release:publish -- notes.md');
  try{
-  run('gh',['release','create',tag,...assets,'--repo','HEYD66/facet','--target',sha,'--draft','--title','千面 Facet '+pkg.version,'--notes-file',notes]);
-  const release=JSON.parse(run('gh',['release','view',tag,'--repo','HEYD66/facet','--json','assets,isDraft,url']));
+  run('gh',['release','create',tag,...assets,'--repo','momoqiqi-qwq/QianXi-Accounts','--target',sha,'--draft','--title','千禧accounts '+pkg.version,'--notes-file',notes]);
+  const release=JSON.parse(run('gh',['release','view',tag,'--repo','momoqiqi-qwq/QianXi-Accounts','--json','assets,isDraft,url']));
   for(const file of assets){const row=release.assets.find(item=>item.name===path.basename(file));if(!row||row.size!==fs.statSync(file).size)throw Error('GitHub 发布文件未完整上传；保留草稿，请核对后发布');}
-  run('gh',['release','edit',tag,'--repo','HEYD66/facet','--draft=false','--latest']);
-  const published=JSON.parse(run('gh',['release','view',tag,'--repo','HEYD66/facet','--json','url,isDraft']));
+  run('gh',['release','edit',tag,'--repo','momoqiqi-qwq/QianXi-Accounts','--draft=false','--latest']);
+  const published=JSON.parse(run('gh',['release','view',tag,'--repo','momoqiqi-qwq/QianXi-Accounts','--json','url,isDraft']));
   if(published.isDraft)throw Error('发布仍处于草稿状态，请核对 GitHub 发布结果');
   console.log(published.url);
  }finally{fs.unlinkSync(notes);fs.rmdirSync(path.dirname(notes));}

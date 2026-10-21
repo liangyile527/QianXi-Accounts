@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow,dialog}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-zip-ui-'));app.setPath('userData',root);let c,win;const wait=async f=>{for(let i=0;i<100;i++){if(await f())return;await new Promise(r=>setTimeout(r,50));}throw Error('Timeout');};setTimeout(()=>app.exit(2),60000).unref();
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-zip-ui-'));app.setPath('userData',root);let c,win;const wait=async f=>{for(let i=0;i<100;i++){if(await f())return;await new Promise(r=>setTimeout(r,50));}throw Error('Timeout');};setTimeout(()=>app.exit(2),60000).unref();
 app.whenReady().then(async()=>{try{
  const file=path.join(root,'extension.zip');fs.writeFileSync(file,require('./extension-zip-fixture.cjs').zip([{name:'manifest.json',data:JSON.stringify({manifest_version:3,name:'ZIP UI verification',version:'1.0',permissions:['storage']})}]));
  win=new BrowserWindow({show:false,width:1200,height:800,webPreferences:{preload:path.join(__dirname,'../src/main/preload.cjs'),sandbox:true,contextIsolation:true}});c=new(require('../src/main/controller.cjs').Controller)(win,root,'');require('../src/main/ipc.cjs').installIPC(win,c);

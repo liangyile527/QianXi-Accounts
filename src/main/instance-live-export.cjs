@@ -42,7 +42,7 @@ async function exportSelected(transfer,ids,destination,{deleteAfterExport=false,
     await quiesce(ses,withCookies);const x=c.store.get(id),cookies=await withCookies(ses,async d=>(await d.sendCommand('Network.getAllCookies')).cookies);cookies.forEach(cookieDetails);
     instances.push({id,name:x.name,url:x.url,environment:x.environment,notes:x.notes||'',muted:x.muted===true,volume:x.volume??100,previousExit:previousExit(c,id),cookies});
    }
-   const metadata={format:'facet-instance-backup',version:1,platform:process.platform,electron:process.versions.electron,app:require('./application-version.cjs').applicationVersion(app),createdAt:new Date().toISOString(),instances};validateMetadata(metadata);
+   const metadata={format:'qianxi-instance-backup',version:1,platform:process.platform,electron:process.versions.electron,app:require('./application-version.cjs').applicationVersion(app),createdAt:new Date().toISOString(),instances};validateMetadata(metadata);
    for(let i=0;i<ids.length;i++){
     const source=profile(c.dir,ids[i]),target=path.join(root,'profiles',String(i));checkCachePath(source,archive.files(source));let stable=false;
     for(let attempt=0;attempt<3&&!stable;attempt++){

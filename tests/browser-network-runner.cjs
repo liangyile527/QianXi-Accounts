@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const {spawnSync} = require('node:child_process');
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-browser-network-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-browser-network-'));
 let passed = false;
 try {
   for (const mode of ['baseline', 'guarded', 'seed', 'interrupted', 'recovered', 'persisted']) {

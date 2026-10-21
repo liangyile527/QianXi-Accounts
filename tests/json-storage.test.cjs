@@ -6,7 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { atomic } = require('../src/main/json-storage.cjs');
 function fixture(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-atomic-unit-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-atomic-unit-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   return { dir, file: path.join(dir, 'data.json') };
 }

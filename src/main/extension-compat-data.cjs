@@ -48,7 +48,7 @@ class CompatData{
  }
  async sessions(ctx,method,args){
   if(method==='getRecentlyClosed')return structuredClone(this.data.closedTabs.slice(0,Math.min(25,args[0]?.maxResults??25)));
-  if(method==='getDevices')return []; // Facet has no signed-in cross-device browser sessions.
+  if(method==='getDevices')return []; // QianXi has no signed-in cross-device browser sessions.
   if(method!=='restore')throw Error('不支持的会话接口');
   const id=args[0],index=id?this.data.closedTabs.findIndex(x=>x.tab.sessionId===id):0;if(index<0||!this.data.closedTabs[index])throw Error('没有可恢复的标签');const saved=this.data.closedTabs[index],tab=await this.c.tabs.create(ctx,{url:saved.tab.url,active:true});this.data.closedTabs.splice(index,1);this.state.save();this.c.broadcast('sessions.onChanged',[]);return {lastModified:saved.lastModified,tab};
  }

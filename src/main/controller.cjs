@@ -4,7 +4,7 @@ const {app,session,screen,BrowserWindow,WebContentsView,View}=require('electron'
 const {installWebRTCPolicy}=require('./webrtc-policy.cjs');
 // 实例网页里的音量脚本启动时异步取当前音量（只返回一个 0–1 的数字）；由控制器自己注册，不依赖界面 IPC 是否安装。
 const volumeOwners=new Set();let volumeIPC=false;
-function installVolumeIPC(){if(volumeIPC)return;volumeIPC=true;require('electron').ipcMain.handle('facet:volume-get',event=>{for(const owner of volumeOwners){const v=owner.volumeForSession(event.sender.session,true);if(v!=null)return v;}return 1;});}
+function installVolumeIPC(){if(volumeIPC)return;volumeIPC=true;require('electron').ipcMain.handle('qianxi:volume-get',event=>{for(const owner of volumeOwners){const v=owner.volumeForSession(event.sender.session,true);if(v!=null)return v;}return 1;});}
 const {Store,safeURL,parseNodes,networkConfig}=require('./store.cjs');
 const {downloadSubscription}=require('./subscription.cjs');
 const {Mihomo}=require('./mihomo.cjs');
@@ -38,9 +38,9 @@ class Controller {
  // 音量：Electron 没有单个网页的音量接口。每个实例会话注册一个隔离环境的脚本（volume-preload.cjs，网页脚本看不到），
  // 按实例音量缩放网页里 <video>/<audio> 的音量；包括子框架（nodeIntegrationInSubFrames 只让脚本进子框架，沙盒下不开放 Node）。
  volumeFor(id){const x=this.store.list().find(x=>x.id===id);const v=Number.isInteger(x?.volume)?x.volume:100;return Math.max(0,Math.min(100,v));}
- volumePreload(s){volumeOwners.add(this);installVolumeIPC();try{if(s.getPreloadScripts?.().some(p=>p.id==='facet-volume'))return;s.registerPreloadScript({id:'facet-volume',type:'frame',filePath:path.join(__dirname,'volume-preload.cjs')});}catch(e){this.workspace?.log?.('application','音量脚本注册失败：'+e.message,'WARN');}}
+ volumePreload(s){volumeOwners.add(this);installVolumeIPC();try{if(s.getPreloadScripts?.().some(p=>p.id==='qianxi-volume'))return;s.registerPreloadScript({id:'qianxi-volume',type:'frame',filePath:path.join(__dirname,'volume-preload.cjs')});}catch(e){this.workspace?.log?.('application','音量脚本注册失败：'+e.message,'WARN');}}
  volumeForSession(ses,strict){for(const [id,r] of this.runtimes)if(r.session===ses)return this.volumeFor(id)/100;return strict?null:1;}
- sendVolume(id){const r=this.runtimes.get(id);if(!r?.session)return;const f=this.volumeFor(id)/100;for(const wc of require('electron').webContents.getAllWebContents()){try{if(wc.isDestroyed()||wc.session!==r.session)continue;for(const frame of wc.mainFrame.framesInSubtree)try{frame.send('facet:volume',f);}catch{}}catch{}}}
+ sendVolume(id){const r=this.runtimes.get(id);if(!r?.session)return;const f=this.volumeFor(id)/100;for(const wc of require('electron').webContents.getAllWebContents()){try{if(wc.isDestroyed()||wc.session!==r.session)continue;for(const frame of wc.mainFrame.framesInSubtree)try{frame.send('qianxi:volume',f);}catch{}}catch{}}}
  setVolume(id,volume){const x=this.store.get(id),v=Math.round(Number(volume));const patch={volume:v};if(v>0&&x.muted)patch.muted=false;this.store.update(id,patch);this.applyAudio(id);this.sendVolume(id);this.emitSoon();return {volume:this.volumeFor(id),muted:this.store.get(id).muted===true};}
  applyAudio(id){const r=this.runtimes.get(id);if(!r)return;const muted=this.mutedFor(id),list=new Set();const add=wc=>{if(wc&&!wc.isDestroyed())list.add(wc);};add(r.view?.webContents);for(const w of r.popups||[])if(!w.isDestroyed())add(w.webContents);const ses=r.view?.webContents?.session;if(ses)for(const wc of require('electron').webContents.getAllWebContents())try{if(!wc.isDestroyed()&&wc.session===ses)add(wc);}catch{}for(const wc of list)try{wc.setAudioMuted(muted);}catch{}}
  setMuted(id,muted){if(id==null)this.store.setMuted(muted===true);else{this.store.get(id);this.store.update(id,{muted:muted===true});}for(const key of this.runtimes.keys())this.applyAudio(key);this.emit();return {global:this.store.muted,instance:id==null?undefined:this.mutedFor(id)};}

@@ -17,7 +17,7 @@ class Mihomo {
  let child;try{child=spawnCore(this.binary,this.dir,this.config);}catch(e){this.clean();throw e;}this.child=child;const traceId=this.traceId,logContext={source:'core',pid:child.pid,...this.trace?.context,taskId:this.trace?.context?.taskId||traceId};this.trace?.journal.record(traceId,{stage:'core-spawned',pid:child.pid,proxyPort:this.proxyPort});
  if(process.platform==='win32'){
   const marker=()=>({hostPid:child.pid,corePid:child.corePid||null,hostBinary:hostPath(),coreBinary:path.resolve(this.binary),config:path.resolve(this.config),proxyPort:this.proxyPort,controllerPort:this.controllerPort,createdAt:new Date().toISOString()});
-  child.on('facet-core-pid',()=>{try{writeProcessMarker(this.dir,marker());}catch{} });
+  child.on('qianxi-core-pid',()=>{try{writeProcessMarker(this.dir,marker());}catch{} });
   try{writeProcessMarker(this.dir,marker());}catch(e){try{child.kill();}catch{}this.clean();throw Error('进程保护租约写入失败，已阻止代理启动');}
  }
  // Drain output without persisting proxy credentials or unrestricted engine log lines.

@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-overview-start-audit-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-overview-start-audit-'));app.setPath('userData',root);
 let c,win,server;const wait=async fn=>{for(let i=0;i<200;i++){if(await fn())return;await new Promise(r=>setTimeout(r,50));}throw Error('Verification timed out');};
 setTimeout(()=>app.exit(2),90000).unref();
 app.whenReady().then(async()=>{try{

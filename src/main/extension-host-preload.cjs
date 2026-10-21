@@ -3,15 +3,15 @@ const {contextBridge,ipcRenderer}=require('electron');
 const extensionContext=typeof location==='undefined'||location.protocol==='chrome-extension:';
 if(extensionContext){
  const hostBridge={
-  call:(method,args)=>ipcRenderer.invoke('facet:extension-host',method,args),
-  onClick:listener=>{const handler=(_event,info,tab)=>listener(info,tab);ipcRenderer.on('facet:extension-menu-click',handler);return ()=>ipcRenderer.removeListener('facet:extension-menu-click',handler);},
-  onCompat:listener=>{const handler=(_event,payload)=>listener(payload);ipcRenderer.on('facet:extension-compat-event',handler);return ()=>ipcRenderer.removeListener('facet:extension-compat-event',handler);},
-  onDebugger:listener=>{const handler=(_event,payload)=>listener(payload);ipcRenderer.on('facet:extension-debugger-event',handler);return ()=>ipcRenderer.removeListener('facet:extension-debugger-event',handler);}
- };if(process.contextIsolated)contextBridge.exposeInMainWorld('__facetExtensionHost',hostBridge);else globalThis.__facetExtensionHost=hostBridge;
+  call:(method,args)=>ipcRenderer.invoke('qianxi:extension-host',method,args),
+  onClick:listener=>{const handler=(_event,info,tab)=>listener(info,tab);ipcRenderer.on('qianxi:extension-menu-click',handler);return ()=>ipcRenderer.removeListener('qianxi:extension-menu-click',handler);},
+  onCompat:listener=>{const handler=(_event,payload)=>listener(payload);ipcRenderer.on('qianxi:extension-compat-event',handler);return ()=>ipcRenderer.removeListener('qianxi:extension-compat-event',handler);},
+  onDebugger:listener=>{const handler=(_event,payload)=>listener(payload);ipcRenderer.on('qianxi:extension-debugger-event',handler);return ()=>ipcRenderer.removeListener('qianxi:extension-debugger-event',handler);}
+ };if(process.contextIsolated)contextBridge.exposeInMainWorld('__qianxiExtensionHost',hostBridge);else globalThis.__qianxiExtensionHost=hostBridge;
  const installHost=()=>{
-  const api=globalThis.chrome,host=globalThis.__facetExtensionHost;if(location.protocol!=='chrome-extension:'||!api||!host)return;
+  const api=globalThis.chrome,host=globalThis.__qianxiExtensionHost;if(location.protocol!=='chrome-extension:'||!api||!host)return;
   const result=(promise,callback)=>{if(typeof callback!=='function')return promise;promise.then(value=>callback(value),error=>{console.error('Extension compatibility: '+error.message);callback();});};
-  // Electron intentionally does not implement chrome.debugger for extensions. Facet already
+  // Electron intentionally does not implement chrome.debugger for extensions. QianXi already
   // owns one CDP connection per instance, so expose a narrowly scoped adapter that multiplexes
   // supported Network commands onto that instance connection. The main process validates the
   // extension permission, target and command allow-list; this is not a general CDP bridge.
@@ -40,7 +40,7 @@ if(extensionContext){
    const listeners=new Set(),pending=[];host.onClick((info,tab)=>{if(!listeners.size){if(pending.length<10)pending.push([info,tab]);return;}for(const fn of listeners)fn(info,tab);});
    let serial=0;
    api.contextMenus={
-    create:(properties,callback)=>{const id=properties.id??'facet-menu-'+(++serial);result(host.call('menu-create',[{...properties,id}]),callback||(()=>{}));return id;},
+    create:(properties,callback)=>{const id=properties.id??'qianxi-menu-'+(++serial);result(host.call('menu-create',[{...properties,id}]),callback||(()=>{}));return id;},
     update:(id,properties,callback)=>result(host.call('menu-update',[id,properties]),callback),
     remove:(id,callback)=>result(host.call('menu-remove',[id]),callback),
     removeAll:callback=>result(host.call('menu-clear',[]),callback),

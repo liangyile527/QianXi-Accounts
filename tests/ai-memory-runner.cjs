@@ -3,7 +3,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const {resolveRuntime,childEnvironment}=require('../scripts/electron-runtime.cjs');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-ai-memory-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-ai-memory-'));
 const reports=[],payloads=[];
 const server=http.createServer(async(req,res)=>{
  try{
@@ -15,7 +15,7 @@ const server=http.createServer(async(req,res)=>{
   if(typeof last?.content==='string'&&last.content.startsWith('LONG_HISTORY'))message.content='已记录长历史：'+'资料'.repeat(5000);
   if(last?.content==='HOLD_TOOL')message={role:'assistant',content:null,tool_calls:[
    {id:'read-before-exit',type:'function',function:{name:'list_instances',arguments:'{}'}},
-   {id:'pending-at-exit',type:'function',function:{name:'facet_action',arguments:JSON.stringify({action:'rename',params:{id:JSON.parse(input.messages[0].content.split('授权实例：').at(-1))[0].id,name:'Must never be applied'}})}}
+   {id:'pending-at-exit',type:'function',function:{name:'qianxi_action',arguments:JSON.stringify({action:'rename',params:{id:JSON.parse(input.messages[0].content.split('授权实例：').at(-1))[0].id,name:'Must never be applied'}})}}
   ]};
   res.setHeader('Content-Type','application/json');res.end(JSON.stringify({choices:[{message}]}));
  }catch(e){res.statusCode=500;res.end('fixture error');console.error(e.message);}

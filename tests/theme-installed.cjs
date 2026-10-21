@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),{chromium}=require('playwright');
 const executable=path.resolve(process.argv[2]),version=process.argv[3]||require('../package.json').version;
-const data=fs.mkdtempSync(path.join(os.tmpdir(),'facet-theme-')),report={data,executable,passed:0,results:[],errors:[]};
+const data=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-theme-')),report={data,executable,passed:0,results:[],errors:[]};
 let child,browser,ui;
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function wait(fn,label,timeout=30000){const end=Date.now()+timeout;while(Date.now()<end){if(await fn())return;await sleep(80);}throw Error('Timeout: '+label);}

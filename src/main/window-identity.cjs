@@ -1,8 +1,8 @@
 'use strict';
 const {resourcePath}=require('./app-paths.cjs');
-const APP_ID='Facet.MultiInstanceBrowser';
+const APP_ID='com.qianxi.accounts';
 function installWindowIdentity(app){
- const icon=resourcePath(app,process.platform==='win32'?'facet.ico':'facet.png');
+ const icon=resourcePath(app,process.platform==='win32'?'qianxi.ico':'qianxi.png');
  if(process.platform==='win32')app.setAppUserModelId(APP_ID);
  app.on('browser-window-created',(_event,win)=>{
   if(process.platform==='win32'||process.platform==='linux')win.setIcon(icon);

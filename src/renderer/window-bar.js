@@ -1,15 +1,15 @@
 'use strict';
 // 资源占用轮询 + 自绘标题栏。
 // 自绘标题栏仅在 Windows 自定义边框时启用：颜色跟随主题与配色，右侧系统按钮同步换色，显示整个应用的 CPU / GPU / 内存（含 Mihomo 内核）。
-// 轮询每 2 秒一次，结果同时以 facet-metrics 事件广播给宫格页（每个格子显示自己实例的占用）；
+// 轮询每 2 秒一次，结果同时以 qianxi-metrics 事件广播给宫格页（每个格子显示自己实例的占用）；
 // 既没有标题栏、也不在宫格页，或窗口最小化 / 不可见时不轮询。
 (()=>{
- const root=document.documentElement,api=window.facet,bar=document.getElementById('windowBar');if(!api)return;
+ const root=document.documentElement,api=window.qianxi,bar=document.getElementById('windowBar');if(!api)return;
  const custom=root.dataset.frame==='custom'&&!!bar;
  const size=mb=>mb>=1024?`${(mb/1024).toFixed(mb>=10240?1:2)} GB`:`${Math.max(0,Math.round(mb))} MB`;
- window.facetSize=size;
+ window.qianxiSize=size;
  // 小于 10% 显示一位小数，空闲时也能看出变化。
- const pct=v=>{v=Math.max(0,Number(v)||0);return v<10?`${v.toFixed(1)}%`:`${Math.round(v)}%`;};window.facetPct=pct;
+ const pct=v=>{v=Math.max(0,Number(v)||0);return v<10?`${v.toFixed(1)}%`:`${Math.round(v)}%`;};window.qianxiPct=pct;
  if(custom){
   const parse=value=>{let c=String(value||'').trim(),m=c.match(/^#([0-9a-f]{3})$/i);if(m)c='#'+[...m[1]].map(x=>x+x).join('');m=c.match(/^#([0-9a-f]{6})$/i);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));m=c.match(/^rgba?\(([^)]+)\)$/);return m?m[1].split(/[\s,\/]+/).slice(0,3).map(Number):null;};
   const hex=rgb=>'#'+rgb.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
@@ -42,11 +42,11 @@
  let busy=false;
  const tick=async()=>{
   if(busy||!wanted())return;busy=true;
-  try{const r=await api.request('app-metrics');if(r?.ok&&r.value){show(r.value);window.dispatchEvent(new CustomEvent('facet-metrics',{detail:r.value}));}}
+  try{const r=await api.request('app-metrics');if(r?.ok&&r.value){show(r.value);window.dispatchEvent(new CustomEvent('qianxi-metrics',{detail:r.value}));}}
   catch{}finally{busy=false;}
  };
  setInterval(tick,2000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
- window.facetMetricsNow=tick;
+ window.qianxiMetricsNow=tick;
  tick();
 })();

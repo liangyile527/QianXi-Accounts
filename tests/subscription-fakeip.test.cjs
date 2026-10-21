@@ -109,7 +109,7 @@ test('the original overall deadline covers a stalled public-DNS recovery',async 
 test('Library import and refresh share the same generic path for three different providers',async t=>{
   const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
   const {Store}=require('../src/main/store.cjs'),{Library}=require('../src/main/library.cjs');
-  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-fakeip-library-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-fakeip-library-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
   systemDns(t);const names=publicDns(t),calls=subscriptionHttp(t);
   const lib=new Library(dir,new Store(dir));
   const hosts=['subscription-one.example.com','different-two.example.net','other-three.example.org'],ids=[];

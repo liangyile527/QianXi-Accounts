@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),vm=require('node:vm');
 const {Store}=require('../src/main/store.cjs');
 function fixture(){
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-safety-'));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-safety-'));
  const store=new Store(dir),x=store.create('Safety');store.saveNodes(x.id,[{name:'local',type:'http',server:'127.0.0.1',port:12345}],null);
  const calls=[],ses={closeAllConnections:async()=>calls.push('connections'),clearStorageData:async()=>calls.push('storage'),clearCache:async()=>calls.push('cache')};
  const filename=path.resolve(__dirname,'../src/main/controller.cjs'),realRequire=require('node:module').createRequire(filename),module={exports:{}};

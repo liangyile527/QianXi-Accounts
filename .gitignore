@@ -3,7 +3,7 @@ dist/
 release/
 *.log
 .DS_Store
-/Facet.lnk
+/QianXiAccounts.lnk
 # Local unfinished work and personal notes are not release sources.
 /src/main/subscription-proxy.cjs
 /.local-dev/

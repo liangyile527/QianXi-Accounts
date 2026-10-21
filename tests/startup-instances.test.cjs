@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {Store}=require('../src/main/store.cjs'),{startOnLaunch}=require('../src/main/startup-instances.cjs');
-function setup(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-startup-unit-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return {dir,store:new Store(dir)};}
+function setup(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-startup-unit-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return {dir,store:new Store(dir)};}
 test('startup flags default off, persist independently, and reject non-booleans without writing',t=>{
  const {dir,store}=setup(t),a=store.create('A'),b=store.create('B');assert.equal(a.autoStart,false);store.update(a.id,{autoStart:true});assert.equal(new Store(dir).get(a.id).autoStart,true);assert.equal(new Store(dir).get(b.id).autoStart,false);
  const before=fs.readFileSync(store.file);for(const value of [null,'true',1,{},[]])assert.throws(()=>store.update(a.id,{autoStart:value}));assert.deepEqual(fs.readFileSync(store.file),before);

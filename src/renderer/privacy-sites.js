@@ -9,14 +9,14 @@ const privacySites=Object.freeze([
 let privacyMenuFor=null,privacyMenuClosedAt=0,privacyMenuKey='';
 function privacySitesButtonHTML(){return `<button type="button" class="privacy-sites-trigger" data-privacy-toggle aria-label="隐私检测网站" title="展开隐私检测网站" aria-haspopup="dialog" aria-expanded="${privacyMenuFor===activeId}">${icon('shield')}<span>检测</span>${icon('chevron')}</button>`;}
 function privacySitesMenuHTML(x){return `<div class="privacy-sites-menu"><header><strong>隐私检测</strong><small title="${esc(x.name)}">${esc(x.name)}</small></header><div class="privacy-sites-list">${privacySites.map(site=>`<button type="button" class="privacy-site ${site.tone}" data-privacy-site="${site.id}" data-instance-id="${esc(x.id)}" ${x.status!=='running'||quickNavigating.has(x.id)?'disabled':''}><span class="privacy-site-icon">${icon(site.icon)}</span><span class="privacy-site-label"><b>${site.name}</b><small>${site.note}</small></span>${icon('arrow')}</button>`).join('')}</div><p class="privacy-sites-note">${x.status==='running'?`在当前实例打开 · ${x.network.mode==='direct'?'使用实例直连网络':'沿用当前代理'}`:'请先启动当前实例'}</p></div>`;}
-function privacyMenuNative(){return !!window.facet?.onOverlay;}
-function closePrivacySitesMenu(returnFocus=false){const was=!!privacyMenuFor;privacyMenuFor=null;privacyMenuKey='';$('[data-privacy-toggle]')?.setAttribute('aria-expanded','false');if(!was)return;if(privacyMenuNative())window.facet.request('overlay-hide').catch(()=>{});else{document.getElementById('privacySitesMenu')?.close();layout();}if(returnFocus)$('[data-privacy-toggle]')?.focus();}
+function privacyMenuNative(){return !!window.qianxi?.onOverlay;}
+function closePrivacySitesMenu(returnFocus=false){const was=!!privacyMenuFor;privacyMenuFor=null;privacyMenuKey='';$('[data-privacy-toggle]')?.setAttribute('aria-expanded','false');if(!was)return;if(privacyMenuNative())window.qianxi.request('overlay-hide').catch(()=>{});else{document.getElementById('privacySitesMenu')?.close();layout();}if(returnFocus)$('[data-privacy-toggle]')?.focus();}
 function syncPrivacySitesMenu(){
  if(!privacyMenuFor)return;
  const x=current(),button=$('[data-privacy-toggle]');
  if(view!=='browser'||x?.id!==privacyMenuFor||!button||modal||document.querySelector('dialog[data-browser-overlay][open]:not(#privacySitesMenu)')){closePrivacySitesMenu();return;}
  button.setAttribute('aria-expanded','true');const r=button.getBoundingClientRect(),html=privacySitesMenuHTML(x),attrs=extensionMenuAttrs(),key=JSON.stringify([html,attrs,r.right,r.bottom]);
- if(privacyMenuNative()){if(key!==privacyMenuKey){privacyMenuKey=key;window.facet.request('overlay-show',{html,anchor:{right:r.right,bottom:r.bottom},width:310,attrs,label:'隐私检测网站',update:true}).catch(()=>closePrivacySitesMenu());}}
+ if(privacyMenuNative()){if(key!==privacyMenuKey){privacyMenuKey=key;window.qianxi.request('overlay-show',{html,anchor:{right:r.right,bottom:r.bottom},width:310,attrs,label:'隐私检测网站',update:true}).catch(()=>closePrivacySitesMenu());}}
  else{const d=document.getElementById('privacySitesMenu');if(!d?.open)return;d.innerHTML=html;d.style.width='310px';d.style.left=Math.max(8,Math.min(r.right-310,innerWidth-318))+'px';d.style.top=(r.bottom+6)+'px';}
 }
 async function openPrivacySitesMenu(){
@@ -31,7 +31,7 @@ async function openPrivacySite(siteId,instanceId){
  closePrivacySitesMenu();if(x.status!=='running'){toast('请先启动当前实例');return;}if(quickNavigating.has(x.id))return;
  quickNavigating.add(x.id);render();try{await request('navigate',{id:x.id,url:site.url});}catch(e){if(!String(e.message).includes('ERR_ABORTED'))toast(e.message);}finally{quickNavigating.delete(x.id);render();}
 }
-window.facet?.onOverlay?.(e=>{if(e?.type==='closed'&&privacyMenuFor){privacyMenuFor=null;privacyMenuKey='';privacyMenuClosedAt=Date.now();$('[data-privacy-toggle]')?.setAttribute('aria-expanded','false');if(e.reason==='escape')$('[data-privacy-toggle]')?.focus();}else if(e?.type==='action'&&e.data?.privacySite)openPrivacySite(e.data.privacySite,e.data.instanceId);});
+window.qianxi?.onOverlay?.(e=>{if(e?.type==='closed'&&privacyMenuFor){privacyMenuFor=null;privacyMenuKey='';privacyMenuClosedAt=Date.now();$('[data-privacy-toggle]')?.setAttribute('aria-expanded','false');if(e.reason==='escape')$('[data-privacy-toggle]')?.focus();}else if(e?.type==='action'&&e.data?.privacySite)openPrivacySite(e.data.privacySite,e.data.instanceId);});
 document.addEventListener('click',e=>{if(e.target.closest('[data-privacy-toggle]')){if(privacyMenuFor)closePrivacySitesMenu(true);else if(Date.now()-privacyMenuClosedAt>=350)openPrivacySitesMenu();}const b=e.target.closest('[data-privacy-site]');if(b&&!b.disabled)openPrivacySite(b.dataset.privacySite,b.dataset.instanceId);});
 document.addEventListener('mousedown',e=>{if(privacyMenuFor&&!e.target.closest('[data-privacy-toggle],#privacySitesMenu'))closePrivacySitesMenu();},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&privacyMenuFor){e.preventDefault();closePrivacySitesMenu(true);}},true);

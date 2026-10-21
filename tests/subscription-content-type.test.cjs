@@ -73,7 +73,7 @@ test('real HTTP library transaction: import, reload, refresh and failed update p
   await fixture((_req, res) => {
     res.setHeader('Content-Type', 'text/html'); res.end(failed ? '<html>login secret-fixture</html>' : yaml);
   }, async base => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-subscription-format-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-subscription-format-'));
     try {
       const store = new Store(dir), instance = store.create('Original');
       const lib = new Library(dir, store), url = base.replace('127.0.0.1', 'subscription.example.test') + '/sub?token=fixture-token';

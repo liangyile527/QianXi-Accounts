@@ -7,7 +7,7 @@ if(-not $WindowHandle) { throw 'The specified process has no main window' }
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
-public static class FacetWindowIdentityProbe {
+public static class QianXiWindowIdentityProbe {
  [StructLayout(LayoutKind.Sequential)] public struct Key {public Guid fmtid; public uint pid;}
  [StructLayout(LayoutKind.Explicit, Size=24)] public struct Value {[FieldOffset(0)] public ushort vt; [FieldOffset(8)] public IntPtr pointer;}
  [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] public interface Store {
@@ -39,10 +39,10 @@ function BitmapHash($bitmap) {
  finally { $stream.Dispose(); $hash.Dispose() }
 }
 function IconDetails([bool]$small) {
- $handle = [FacetWindowIdentityProbe]::Icon($WindowHandle,$small)
+ $handle = [QianXiWindowIdentityProbe]::Icon($WindowHandle,$small)
  if($handle -eq 0) { return $null }
  $bitmap = [System.Drawing.Icon]::FromHandle([IntPtr]$handle).ToBitmap()
  try { return @{width=$bitmap.Width;height=$bitmap.Height;hash=(BitmapHash $bitmap)} }
  finally { $bitmap.Dispose() }
 }
-[ordered]@{handle=$WindowHandle;pid=[FacetWindowIdentityProbe]::Owner($WindowHandle);appId=[FacetWindowIdentityProbe]::Read($WindowHandle,5);icon=[FacetWindowIdentityProbe]::Read($WindowHandle,3);command=[FacetWindowIdentityProbe]::Read($WindowHandle,2);name=[FacetWindowIdentityProbe]::Read($WindowHandle,4);large=(IconDetails $false);small=(IconDetails $true)} | ConvertTo-Json -Compress -Depth 4
+[ordered]@{handle=$WindowHandle;pid=[QianXiWindowIdentityProbe]::Owner($WindowHandle);appId=[QianXiWindowIdentityProbe]::Read($WindowHandle,5);icon=[QianXiWindowIdentityProbe]::Read($WindowHandle,3);command=[QianXiWindowIdentityProbe]::Read($WindowHandle,2);name=[QianXiWindowIdentityProbe]::Read($WindowHandle,4);large=(IconDetails $false);small=(IconDetails $true)} | ConvertTo-Json -Compress -Depth 4

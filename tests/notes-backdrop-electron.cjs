@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-notes-drag-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-notes-drag-'));app.setPath('userData',root);
 let c,win;const pause=()=>new Promise(r=>setTimeout(r,100));const wait=async fn=>{for(let i=0;i<100;i++){if(await fn())return;await pause();}throw Error('Timed out');};
 setTimeout(()=>app.exit(2),60000).unref();
 app.whenReady().then(async()=>{try{

@@ -3,15 +3,15 @@
 // No production Controller, existing extensions, real sites or proxy cores are used.
 const { app, BrowserWindow, session, screen } = require('electron');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict');
-const root = process.env.FACET_POPUP_TEST_ROOT;
-if (!root || !path.basename(root).startsWith('facet-popup-acceptance-') ||
+const root = process.env.QIANXI_POPUP_TEST_ROOT;
+if (!root || !path.basename(root).startsWith('qianxi-popup-acceptance-') ||
     path.dirname(path.resolve(root)).toLowerCase() !== path.resolve(os.tmpdir()).toLowerCase()) {
   console.error('This fixture must run through scripts/test-extension-popup.cjs'); app.exit(2);
 } else {
   for (const [key, name] of [['userData','user-data'],['sessionData','session-data'],['logs','logs'],['crashDumps','crashes']]) {
     const folder=path.join(root,name);fs.mkdirSync(folder,{recursive:true});app.setPath(key,folder);
   }
-  if (['1','1.25','2'].includes(process.env.FACET_POPUP_TEST_SCALE)) app.commandLine.appendSwitch('force-device-scale-factor',process.env.FACET_POPUP_TEST_SCALE);
+  if (['1','1.25','2'].includes(process.env.QIANXI_POPUP_TEST_SCALE)) app.commandLine.appendSwitch('force-device-scale-factor',process.env.QIANXI_POPUP_TEST_SCALE);
   app.commandLine.appendSwitch('disable-background-networking');
   app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
   app.on('window-all-closed',()=>{});
@@ -33,7 +33,7 @@ if (!root || !path.basename(root).startsWith('facet-popup-acceptance-') ||
       const folder=path.join(root,'fixture-extension');fs.mkdirSync(folder);
       fs.writeFileSync(path.join(folder,'manifest.json'),JSON.stringify({manifest_version:3,name:'Controlled layout fixture',version:'1.0',action:{default_popup:'popup.html'},options_page:'popup.html',permissions:[],content_security_policy:{extension_pages:"script-src 'self'; object-src 'self'; connect-src 'none'; style-src 'self' 'unsafe-inline'"}}));
       fs.writeFileSync(path.join(folder,'popup.html'),`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Controlled panel</title><style>html{margin:0}body{margin:0;padding:12px;box-sizing:border-box;width:340px;height:180px;background:#171b23;color:#edf1f8;font:14px Arial,sans-serif}main{height:100%;box-sizing:border-box;border:1px solid #3a4458;padding:12px;display:flex;flex-direction:column;gap:8px}button{font:inherit;padding:6px;border:0;background:#4262d9;color:white}</style></head><body><main><strong>Extension panel</strong><span>Isolated layout fixture</span><button>Example action</button></main></body></html>`);
-      fixtureSession=session.fromPartition('persist:facet-popup-fixture');
+      fixtureSession=session.fromPartition('persist:qianxi-popup-fixture');
       fixtureSession.webRequest.onBeforeRequest((details,callback)=>callback({cancel:!['chrome-extension:','file:','data:','about:'].some(prefix=>details.url.startsWith(prefix))}));
       extension=await fixtureSession.extensions.loadExtension(folder,{allowFileAccess:false});
       const parent=new BrowserWindow({width:1100,height:800,show:false,webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true}});

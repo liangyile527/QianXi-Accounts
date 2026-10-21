@@ -12,7 +12,7 @@ const A = '11111111-1111-4111-8111-111111111111';
 const B = '22222222-2222-4222-8222-222222222222';
 const TEMP_ID = '33333333-3333-4333-8333-333333333333';
 function fixture(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'facet-recovery-unit-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-recovery-unit-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   return dir;
 }

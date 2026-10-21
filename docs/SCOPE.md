@@ -24,7 +24,7 @@
 
 ## 所有权
 
-千禧accounts 项目仓库为 https://github.com/HEYD66/facet 。应用代码、安装包及公开更新清单来自该仓库；用户实例和登录资料保存在本机，不能提交到仓库。
+千禧accounts 项目仓库为 https://github.com/momoqiqi-qwq/QianXi-Accounts 。应用代码、安装包及公开更新清单来自该仓库；用户实例和登录资料保存在本机，不能提交到仓库。
 
 ## 全局代理管理增量
 

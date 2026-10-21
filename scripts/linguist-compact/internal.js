@@ -1,8 +1,8 @@
 /* Runs only in extension UI pages; the original engine and content scripts stay intact. */
 'use strict';
 (() => {
-  const entries = Object.fromEntries(Object.entries(globalThis.facetInternalMessages).map(([key,value]) => [key.toLowerCase(), value]));
-  globalThis.facetInternalLocale = {
+  const entries = Object.fromEntries(Object.entries(globalThis.qianxiInternalMessages).map(([key,value]) => [key.toLowerCase(), value]));
+  globalThis.qianxiInternalLocale = {
     getUILanguage: () => 'zh-CN',
     getMessage(key, substitutions = []) {
       const entry = entries[String(key).toLowerCase()];
@@ -23,9 +23,9 @@
       ['词典','/pages/dictionary/dictionary.html','dictionary']
     ];
     const nav = document.createElement('nav');
-    nav.className = 'FacetInternalNav'; nav.setAttribute('aria-label','翻译工具导航');
+    nav.className = 'QianXiInternalNav'; nav.setAttribute('aria-label','翻译工具导航');
     for (const [label,url,id] of links) {
-      const a = document.createElement('a'); a.textContent = label; a.href = url; a.id = 'facet-nav-'+id;
+      const a = document.createElement('a'); a.textContent = label; a.href = url; a.id = 'qianxi-nav-'+id;
       if (location.pathname === url && id !== 'text') a.setAttribute('aria-current','page');
       if (id === 'text') a.hash = 'text';
       nav.append(a);

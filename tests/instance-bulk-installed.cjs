@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),{chromium}=require('playwright');
-const executable=path.resolve(process.argv[2]),output=path.resolve(process.argv[3]),root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-bulk-installed-'));
+const executable=path.resolve(process.argv[2]),output=path.resolve(process.argv[3]),root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-bulk-installed-'));
 const report={executable,root,results:[],errors:[]};let child,browser,ui,server;const headers=new Map(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function wait(fn,label,ms=90000){const until=Date.now()+ms;while(Date.now()<until){if(await fn())return;await sleep(80);}throw Error('Timeout '+label);}
 const pass=name=>{report.results.push(name);console.log('PASS '+name);};

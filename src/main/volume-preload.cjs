@@ -5,7 +5,7 @@
 const {ipcRenderer}=require('electron');
 let factor=1;
 // 异步取当前音量：取不到也不会卡住网页（按 100% 处理），取到后再调一遍已有的元素。
-ipcRenderer.invoke('facet:volume-get').then(v=>{if(typeof v==='number'&&v>=0&&v<=1&&v!==factor){factor=v;sweep();}}).catch(()=>{});
+ipcRenderer.invoke('qianxi:volume-get').then(v=>{if(typeof v==='number'&&v>=0&&v<=1&&v!==factor){factor=v;sweep();}}).catch(()=>{});
 const base=new WeakMap(),ours=new WeakMap(),known=new Set(),EPS=0.0005;
 const clamp=v=>Math.min(1,Math.max(0,Number(v)||0));
 function remember(el){if(!base.has(el)){base.set(el,el.volume);known.add(new WeakRef(el));}}
@@ -16,4 +16,4 @@ function sweep(){for(const ref of known){const el=ref.deref();if(el)apply(el);el
 window.addEventListener('volumechange',changed,true);
 for(const type of ['loadedmetadata','play','playing'])window.addEventListener(type,e=>apply(e.target),true);
 document.addEventListener('DOMContentLoaded',sweep);
-ipcRenderer.on('facet:volume',(_event,value)=>{factor=clamp(value);sweep();});
+ipcRenderer.on('qianxi:volume',(_event,value)=>{factor=clamp(value);sweep();});

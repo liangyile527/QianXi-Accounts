@@ -74,7 +74,7 @@ POST /v1/instances
 
 ## 5. 通用操作入口
 
-`POST /v1/actions` 复用控制界面使用的 `facet.request` 操作分发器，不需要为每个按钮重复实现后端逻辑。
+`POST /v1/actions` 复用控制界面使用的 `qianxi.request` 操作分发器，不需要为每个按钮重复实现后端逻辑。
 
 请求格式：
 

@@ -2,7 +2,7 @@
 // Password-free streaming archive with a corruption checksum and bounded extraction.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const {pipeline}=require('node:stream/promises'),{Readable,Transform}=require('node:stream');
-const MAGIC=Buffer.from('FACETB02'),MAX_BYTES=20*1024**3,MAX_FILES=100000;
+const MAGIC=Buffer.from('QIANXIB02'),MAX_BYTES=20*1024**3,MAX_FILES=100000;
 const OMIT=new Set(['cache','code cache','gpucache','dawncache','dawngraphitecache','dawnwebgpucache','shadercache','grshadercache','cookies','cookies-journal','cookies-wal','cookies-shm','lock','singletonlock','singletoncookie','singletonsocket','login data','login data-journal','extension state','local extension settings','sync extension settings','extension rules','extension scripts','extensions']);
 function safeEntry(value){if(typeof value!=='string'||value.length>2048||value.includes('\\')||value.startsWith('/')||/[\x00-\x1f:]/.test(value)||value.split('/').some(x=>!x||x==='.'||x==='..'||/[. ]$/.test(x)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(x)))throw Error('备份包含不安全的文件路径');return value;}
 function excluded(relative){return relative.split('/').some(x=>OMIT.has(x.toLowerCase())||/^chrome-extension[_:]/i.test(x));}

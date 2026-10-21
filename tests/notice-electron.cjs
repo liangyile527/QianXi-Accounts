@@ -1,7 +1,7 @@
 'use strict';
 // Exercise the real control renderer above live native page views, with isolated data.
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-notice-')),out=path.resolve(process.env.NOTICE_OUTPUT||'release/local-visible-notice/source-output');fs.mkdirSync(out,{recursive:true});app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-notice-')),out=path.resolve(process.env.NOTICE_OUTPUT||'release/local-visible-notice/source-output');fs.mkdirSync(out,{recursive:true});app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs');let win,c,server;const results=[],errors=[],sleep=ms=>new Promise(r=>setTimeout(r,ms)),ui=s=>win.webContents.executeJavaScript(s);async function wait(fn,label){for(let i=0;i<150;i++){if(await fn())return;await sleep(40);}throw Error('Timeout '+label);}const pass=n=>{results.push(n);console.log('PASS '+n);};
 // capturePage includes the control renderer; native window captures from this investigation are kept separately.
 async function shot(name){await sleep(150);fs.writeFileSync(path.join(out,'controls-'+name),(await win.webContents.capturePage()).toPNG());}

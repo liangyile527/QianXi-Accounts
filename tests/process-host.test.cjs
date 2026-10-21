@@ -8,10 +8,10 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const alive=pid=>{try{process.kill(pid,0);return true;}catch(e){if(e.code==='ESRCH')return false;throw e;}};
 async function until(fn){for(let i=0;i<100;i++){if(await fn())return;await delay(50);}assert.fail('process/port did not reach expected state within 5 seconds');}
 function listening(port){return new Promise(resolve=>{const s=net.connect({host:'127.0.0.1',port});const done=v=>{s.destroy();resolve(v);};s.on('error',()=>done(false));s.on('connect',()=>done(true));s.setTimeout(250,()=>done(false));});}
-function fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-job-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
+function fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-job-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
 async function owner(t,dir,options={}){
  fs.mkdirSync(dir,{recursive:true});
- const p=fork(path.join(__dirname,'process-host-worker.cjs'),[],{windowsHide:true,stdio:['ignore','pipe','pipe','ipc'],...options,env:{...(options.env||process.env),FACET_HOST_TEST_DIR:dir}});
+ const p=fork(path.join(__dirname,'process-host-worker.cjs'),[],{windowsHide:true,stdio:['ignore','pipe','pipe','ipc'],...options,env:{...(options.env||process.env),QIANXI_HOST_TEST_DIR:dir}});
  let stderr='';p.stderr.on('data',x=>stderr=(stderr+x).slice(-2000));
  let info;
  t.after(async()=>{
@@ -20,7 +20,7 @@ async function owner(t,dir,options={}){
  });
  info=await new Promise((resolve,reject)=>{
   const timer=setTimeout(()=>reject(Error('worker startup timeout: '+stderr)),15000);
-  let output='';p.stdout.on('data',chunk=>{output+=chunk;for(;;){const end=output.indexOf('\n');if(end<0)break;const line=output.slice(0,end);output=output.slice(end+1);if(line.startsWith('FACET_TEST_READY=')){clearTimeout(timer);resolve(JSON.parse(line.slice('FACET_TEST_READY='.length)));}}});
+  let output='';p.stdout.on('data',chunk=>{output+=chunk;for(;;){const end=output.indexOf('\n');if(end<0)break;const line=output.slice(0,end);output=output.slice(end+1);if(line.startsWith('QIANXI_TEST_READY=')){clearTimeout(timer);resolve(JSON.parse(line.slice('QIANXI_TEST_READY='.length)));}}});
   p.once('message',m=>{clearTimeout(timer);m.error?reject(Error(m.error)):resolve(m);});
   p.once('error',e=>{clearTimeout(timer);reject(e);});
   p.once('exit',()=>{clearTimeout(timer);reject(Error('worker exited before ready'));});
@@ -48,7 +48,7 @@ test('host exits without spawning a core when parent lease is absent',{skip:proc
  const p=spawn(hostPath(),[binary,dir,path.join(dir,'missing.json')],{windowsHide:true,stdio:['pipe','pipe','pipe']});
  let output='';p.stdout.on('data',x=>output+=x);p.stderr.resume();
  const exited=new Promise((resolve,reject)=>{p.once('exit',resolve);p.once('error',reject);});p.stdin.end();
- assert.equal(await exited,71);assert(!output.includes('FACET_CORE_PID='));assert.deepEqual(fs.readdirSync(dir),[]);
+ assert.equal(await exited,71);assert(!output.includes('QIANXI_CORE_PID='));assert.deepEqual(fs.readdirSync(dir),[]);
 });
 test('forced Electron main-process termination releases the owned core and ports',{skip:process.platform!=='win32',timeout:45000},async t=>{
  const {childEnvironment,resolveRuntime}=require('../scripts/electron-runtime.cjs'),env=childEnvironment();

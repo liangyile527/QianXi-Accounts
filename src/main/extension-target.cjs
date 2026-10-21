@@ -1,6 +1,6 @@
 'use strict';
 const {ipcMain}=require('electron');
-const contexts=new Map(),channel='facet:extension-target';
+const contexts=new Map(),channel='qianxi:extension-target';
 function receive(event){
  const binding=contexts.get(event.sender);if(!binding||event.senderFrame!==event.sender.mainFrame)return null;
  const {runtime,key,extensionId}=binding,wc=runtime.view?.webContents;

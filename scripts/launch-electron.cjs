@@ -12,8 +12,8 @@ function main() {
   const executable = env.ELECTRON_OVERRIDE_DIST_PATH ? installed : resolveRuntime({
     executable: installed, version: require('electron/package.json').version, env
   });
-  const outputDir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-runtime-output-'));
-  const output=new RuntimeOutput(path.join(outputDir,'output.json'));output.flush();env.FACET_RUNTIME_OUTPUT=output.file;
+  const outputDir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-runtime-output-'));
+  const output=new RuntimeOutput(path.join(outputDir,'output.json'));output.flush();env.QIANXI_RUNTIME_OUTPUT=output.file;
   const child = spawn(executable, process.argv.slice(2), {
     cwd: path.join(__dirname, '..'), env, stdio: ['inherit','pipe','pipe'], windowsHide: false
   });

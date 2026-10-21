@@ -97,7 +97,7 @@ function resolveRuntime({executable, version, env, platform = process.platform,
   }
   if (!cacheRoot) {
     if (!env.LOCALAPPDATA) throw new Error('Electron 启动异常 0x80000003，且 LOCALAPPDATA 不可用');
-    cacheRoot = path.join(env.LOCALAPPDATA, 'FacetRuntime', 'electron');
+    cacheRoot = path.join(env.LOCALAPPDATA, 'QianXiRuntime', 'electron');
   }
   const source = path.dirname(executable);
   const relative = path.relative(source, path.resolve(cacheRoot));

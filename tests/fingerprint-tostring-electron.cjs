@@ -2,7 +2,7 @@
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {script,preset}=require('../src/main/fingerprint.cjs');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-tostring-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-tostring-'));
 app.setPath('userData',root);app.on('window-all-closed',()=>{});
 let win,server;const checks=[];
 const probe=()=>{

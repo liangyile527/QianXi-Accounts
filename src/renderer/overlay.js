@@ -3,9 +3,9 @@
 const menu = document.getElementById("menu");
 const KEYS = ["extension", "extensionId", "instanceId", "kind", "view", "privacySite"];
 function report() {
-  facetOverlay.send({ type: "size", height: Math.ceil(menu.getBoundingClientRect().height) });
+  qianxiOverlay.send({ type: "size", height: Math.ceil(menu.getBoundingClientRect().height) });
 }
-facetOverlay.onRender(({ html, attrs, label }) => {
+qianxiOverlay.onRender(({ html, attrs, label }) => {
   const root = document.documentElement;
   for (const a of [...root.attributes]) if (a.name !== "lang") root.removeAttribute(a.name);
   for (const [k, v] of Object.entries(attrs || {})) root.setAttribute(k, v);
@@ -22,6 +22,6 @@ document.addEventListener("click", (e) => {
   if (!b || b.disabled) return;
   const data = {};
   for (const k of KEYS) if (b.dataset[k] !== undefined) data[k] = String(b.dataset[k]);
-  if (data.extension || data.view || data.privacySite) facetOverlay.send({ type: "action", data });
+  if (data.extension || data.view || data.privacySite) qianxiOverlay.send({ type: "action", data });
 });
 new ResizeObserver(report).observe(menu);

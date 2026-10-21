@@ -34,4 +34,4 @@ async function toggleVolumeMute(id){const x=state.instances.find(i=>i.id===id);i
 document.addEventListener('click',e=>{const b=e.target.closest?.('[data-vol]');if(!b||b.disabled)return;e.preventDefault();e.stopPropagation();toggleVolumeMute(b.dataset.vol);},true);
 document.addEventListener('contextmenu',e=>{const b=e.target.closest?.('[data-vol]');if(!b||b.disabled)return;e.preventDefault();e.stopPropagation();openVolume(b,b.dataset.vol);},true);
 document.addEventListener('keydown',e=>{const b=e.target.closest?.('[data-vol]');if(!b||b.disabled||!(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'))return;e.preventDefault();e.stopPropagation();openVolume(b,b.dataset.vol);},true);
-window.facet?.onState(()=>setTimeout(volRefresh,0));
+window.qianxi?.onState(()=>setTimeout(volRefresh,0));

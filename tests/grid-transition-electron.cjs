@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-grid-transition-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-grid-transition-'));app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs');
 let win,c,server;const results=[],sleep=ms=>new Promise(r=>setTimeout(r,ms));async function wait(fn,label){for(let i=0;i<200;i++){if(await fn())return;await sleep(50);}throw Error('Timeout '+label);}const pass=x=>{results.push(x);console.log('PASS '+x);};setTimeout(()=>app.exit(2),90000).unref();
 app.whenReady().then(async()=>{let failure;try{

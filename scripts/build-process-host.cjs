@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {execFileSync}=require('node:child_process');
 if(process.platform!=='win32')throw Error('Process host build requires Windows');
 const root=path.resolve(__dirname,'../resources/process-host');
-const source=path.join(root,'ProcessHost.cs'),binary=path.join(root,'facet-process-host.exe');
+const source=path.join(root,'ProcessHost.cs'),binary=path.join(root,'qianxi-process-host.exe');
 const compiler=path.join(process.env.SystemRoot||'C:\\Windows','Microsoft.NET','Framework64','v4.0.30319','csc.exe');
 execFileSync(compiler,['/nologo','/target:exe','/platform:x64','/optimize+','/out:'+binary,source],{windowsHide:true,stdio:'pipe'});
 const hash=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');

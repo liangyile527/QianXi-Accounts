@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-refresh-audit-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-refresh-audit-'));app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs'),{refreshOne,refreshAll}=require('../src/main/extension-refresh.cjs');
 let c,win,server;const results=[];
 const wait=async fn=>{for(let i=0;i<200;i++){if(await fn())return;await new Promise(r=>setTimeout(r,50));}throw Error('page verification timed out');};

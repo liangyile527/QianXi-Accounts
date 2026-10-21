@@ -4,7 +4,7 @@ $metadata = Get-Content (Join-Path $PSScriptRoot '..\core-artifact.json') -Raw |
 $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $ApkPath))
 try {
     $checks = @{
-        'lib/arm64-v8a/libfacet_mihomo.so' = $metadata.binarySHA256
+        'lib/arm64-v8a/libqianxi_mihomo.so' = $metadata.binarySHA256
         'assets/mihomo/source.tgz' = $metadata.sourceSHA256
         'assets/mihomo/LICENSE' = (Get-FileHash (Join-Path $PSScriptRoot '..\..\resources\mihomo\LICENSE')).Hash
         'assets/mihomo/ARTIFACT.json' = (Get-FileHash (Join-Path $PSScriptRoot '..\core-artifact.json')).Hash

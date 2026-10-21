@@ -5,7 +5,7 @@
 const {app, BrowserWindow} = require('electron');
 const assert = require('node:assert/strict'), fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 
-app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'facet-auto-click-')));
+app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'qianxi-auto-click-')));
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 app.commandLine.appendSwitch('disable-background-networking');
 if (process.platform === 'linux') app.commandLine.appendSwitch('disable-gpu');

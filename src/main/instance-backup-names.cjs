@@ -7,7 +7,7 @@ function timestamp(date=new Date()){
 function backupName(name,date=new Date()){
  let base=String(name||'实例').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/[. ]+$/g,'').slice(0,40).trim()||'实例';
  if(/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(base))base='实例_'+base;
- return base+'_'+timestamp(date)+'_'+crypto.randomBytes(6).toString('hex')+'.facetbackup';
+ return base+'_'+timestamp(date)+'_'+crypto.randomBytes(6).toString('hex')+'.qianxibackup';
 }
 function separateDestinations(directory,rows){const date=new Date();return rows.map(row=>path.join(directory,backupName(row.name,date)));}
 module.exports={timestamp,backupName,separateDestinations};

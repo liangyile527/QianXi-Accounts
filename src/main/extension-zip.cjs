@@ -21,7 +21,7 @@ async function stageSource(catalog,source,replacing=null){
  const manifests=entries.filter(x=>x.entry.type!=='Directory'&&path.posix.basename(x.name)==='manifest.json'&&!x.name.startsWith('__MACOSX/'));
  const selected=manifests.find(x=>x.name==='manifest.json')||(manifests.length===1?manifests[0]:null);
  if(!selected)throw Error(manifests.length?'ZIP 包含多个扩展，请分别导入':'ZIP 中没有 manifest.json');
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-extension-zip-'));let total=0;
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-extension-zip-'));let total=0;
  try{for(const {entry,name} of entries){const dest=path.resolve(root,...name.split('/'));if(!dest.startsWith(root+path.sep))throw Error('ZIP 路径越界');if(entry.type==='Directory'){fs.mkdirSync(dest,{recursive:true});continue;}
  fs.mkdirSync(path.dirname(dest),{recursive:true});let bytes=0,crc=0xffffffff;
  const guard=new Transform({transform(chunk,encoding,done){bytes+=chunk.length;total+=chunk.length;if(total>LIMIT||bytes>entry.uncompressedSize)return done(Error('ZIP 实际解压大小超出声明或上限'));for(const byte of chunk)crc=table[(crc^byte)&255]^(crc>>>8);done(null,chunk);}});

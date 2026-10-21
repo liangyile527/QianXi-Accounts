@@ -15,7 +15,7 @@ function installIPC(window,controller){
   latestScroll={revision:message.revision,scrollTop:message.scrollTop};if(scrollTask)return;
   scrollTask=true;queueMicrotask(()=>{scrollTask=null;const next=latestScroll;latestScroll=null;if(!next||window.isDestroyed()||controller.disposing||!controller.grid)return;if(!controller.scrollGrid(next))window.webContents.send('core:grid-resync',next.revision);});};
  ipcMain.on('core:grid-scroll',onGridScroll);
- const onDevToolsResize=(event,message)=>controller.resizeDevTools(event.sender.id,message||{});ipcMain.on('facet:devtools-resize',onDevToolsResize);
+ const onDevToolsResize=(event,message)=>controller.resizeDevTools(event.sender.id,message||{});ipcMain.on('qianxi:devtools-resize',onDevToolsResize);
  const assignNode=(id,sourceId,name)=>controller.queue(id,async()=>{controller.store.get(id);const node=controller.library.node(sourceId,name);await controller.stopInner(id);controller.store.saveNodes(id,[node],null,{sourceId,name:node.name});controller.store.update(id,{network:{mode:'mihomo',nodeName:node.name}});controller.log(id,'已从全局库分配节点；当前实例已停止，请手动启动');return {id,sourceId,name:node.name,status:'success'};});
  const requestHandler=async(event,message)=>{
   try{if(window.isDestroyed()||controller.disposing)return {ok:false,error:'应用正在关闭'};const controls=window.webContents;if(!controls||controls.isDestroyed())return {ok:false,error:'控制窗口已关闭'};if(event.sender!==controls||event.senderFrame!==controls.mainFrame)throw Error('拒绝非控制界面调用');
@@ -40,8 +40,8 @@ function installIPC(window,controller){
     case 'fingerprint-preset':return {ok:true,value:require('./environment.cjs').environment(require('./fingerprint.cjs').preset(message.preset,require('./environment.cjs').environment(message.environment)))};
     case 'environment-timezone':return {ok:true,value:await controller.diagnostics.timezone(id,message.network)};
     case 'quick-link-save':controller.workspace.saveQuickLink(message.link||{});controller.emit();break;
-    case 'open-github':await shell.openExternal('https://github.com/HEYD66/facet');break;
-    case 'open-feedback':await shell.openExternal('https://github.com/HEYD66/facet/issues');break;
+    case 'open-github':await shell.openExternal('https://github.com/momoqiqi-qwq/QianXi-Accounts');break;
+    case 'open-feedback':await shell.openExternal('https://github.com/momoqiqi-qwq/QianXi-Accounts/issues');break;
     case 'quick-link-remove':controller.workspace.removeQuickLink(message.linkId);controller.emit();break;
     case 'quick-link-move':controller.workspace.moveQuickLink(message.linkId,message.direction);controller.emit();break;
     case 'quick-link-open':await controller.navigate(id,controller.workspace.quickLink(message.linkId).url);break;
@@ -85,7 +85,7 @@ function installIPC(window,controller){
     case 'save-ip':controller.workspace.saveIP(String(message.ip||''),message.note);controller.emit();break;
     case 'remove-ip':controller.workspace.removeIP(message.bookmarkId);controller.emit();break;
     case 'copy-summary':{const value={time:new Date().toISOString(),app:controller.snapshot().versions.app,electron:process.versions.electron,instances:controller.snapshot().instances.map(x=>({id:x.id,status:x.status,network:x.network.mode,page:x.pageState,core:x.coreVersion,environment:{language:x.environment.language,timezone:x.environment.timezone,customUA:!!x.environment.userAgent,customPlatform:!!x.environment.platform},error:require('./workspace.cjs').redact(x.error)})),events:controller.workspace.events.slice(0,100)};await clipboard.writeText(JSON.stringify(value,null,2));return {ok:true,value:{copied:true}};}
-    case 'export-logs':{const result=await dialog.showSaveDialog(window,{title:'导出脱敏系统日志',defaultPath:'facet-events.json',filters:[{name:'JSON',extensions:['json']}]});if(!result.canceled&&result.filePath)fs.writeFileSync(result.filePath,JSON.stringify(controller.workspace.events,null,2));return {ok:true,value:{cancelled:result.canceled}};}
+    case 'export-logs':{const result=await dialog.showSaveDialog(window,{title:'导出脱敏系统日志',defaultPath:'qianxi-events.json',filters:[{name:'JSON',extensions:['json']}]});if(!result.canceled&&result.filePath)fs.writeFileSync(result.filePath,JSON.stringify(controller.workspace.events,null,2));return {ok:true,value:{cancelled:result.canceled}};}
 
     case 'library-hint':case 'library-delete-nodes':case 'library-restore-nodes':case 'library-save':case 'library-rename':case 'library-remove':case 'library-file':return {ok:true,value:await controller.queue('global-library',async()=>{
      if(controller.disposing)throw Error('应用正在退出');
@@ -117,11 +117,11 @@ function installIPC(window,controller){
       const ids=message.ids;for(const target of ids||[])controller.store.get(target);const mode=message.mode||'separate';if(!['separate','combined'].includes(mode))throw Error('导出方式无效');
       let destination;
       if(mode==='separate'){const picked=await dialog.showOpenDialog(window,{title:'选择实例备份保存文件夹',properties:['openDirectory','createDirectory']});if(picked.canceled||!picked.filePaths.length)return {cancelled:true};destination=picked.filePaths[0];}
-      else{const picked=await dialog.showSaveDialog(window,{title:'合并导出实例备份',defaultPath:require('./instance-backup-names.cjs').backupName('Facet-instances'),filters:[{name:'千禧accounts实例备份',extensions:['facetbackup']}]});if(picked.canceled||!picked.filePath)return {cancelled:true};destination=picked.filePath;}
+      else{const picked=await dialog.showSaveDialog(window,{title:'合并导出实例备份',defaultPath:require('./instance-backup-names.cjs').backupName('QianXi-instances'),filters:[{name:'千禧accounts实例备份',extensions:['qianxibackup']}]});if(picked.canceled||!picked.filePath)return {cancelled:true};destination=picked.filePath;}
       return controller.transfer.prepareExport(ids,destination,{mode,deleteAfterExport:message.deleteAfterExport===true});
     })};
     case 'instance-export-reveal':if(controller.transferOutcome?.destination) shell.showItemInFolder(controller.transferOutcome.destination);break;
-    case 'instance-import-inspect':return {ok:true,value:await controller.queue('instance-transfer',async()=>{const picked=await dialog.showOpenDialog(window,{title:'导入实例备份（支持多选）',properties:['openFile','multiSelections'],filters:[{name:'千禧accounts实例备份',extensions:['facetbackup']}]});if(picked.canceled||!picked.filePaths.length)return {cancelled:true};return controller.transfer.inspect(picked.filePaths);})};
+    case 'instance-import-inspect':return {ok:true,value:await controller.queue('instance-transfer',async()=>{const picked=await dialog.showOpenDialog(window,{title:'导入实例备份（支持多选）',properties:['openFile','multiSelections'],filters:[{name:'千禧accounts实例备份',extensions:['qianxibackup']}]});if(picked.canceled||!picked.filePaths.length)return {cancelled:true};return controller.transfer.inspect(picked.filePaths);})};
     case 'instance-import-cancel':return {ok:true,value:controller.transfer.cancel(message.token)};
     case 'instance-import-commit':return {ok:true,value:await controller.queue('instance-transfer',()=>controller.queue('instance-create',()=>controller.transfer.import(message.token,message.selections)))};
     case 'instance-batch-options':return {ok:true,value:require('./instance-batch.cjs').options(controller)};
@@ -163,6 +163,6 @@ function installIPC(window,controller){
  };
  ipcMain.handle('core:request',requestHandler);
  controller.externalRequest=message=>requestHandler({sender:window.webContents,senderFrame:window.webContents.mainFrame},message);
- return ()=>{for(const event of visibilityEvents)window.removeListener(event,sendWindowVisibility);window.webContents.removeListener('did-finish-load',sendWindowVisibility);ipcMain.removeHandler('core:request');delete controller.externalRequest;ipcMain.removeListener('core:grid-scroll',onGridScroll);ipcMain.removeListener('facet:devtools-resize',onDevToolsResize);latestScroll=null;ipcMain.removeListener('overlay:event',onOverlay);overlay.destroy();};
+ return ()=>{for(const event of visibilityEvents)window.removeListener(event,sendWindowVisibility);window.webContents.removeListener('did-finish-load',sendWindowVisibility);ipcMain.removeHandler('core:request');delete controller.externalRequest;ipcMain.removeListener('core:grid-scroll',onGridScroll);ipcMain.removeListener('qianxi:devtools-resize',onDevToolsResize);latestScroll=null;ipcMain.removeListener('overlay:event',onOverlay);overlay.destroy();};
 }
 module.exports={installIPC};

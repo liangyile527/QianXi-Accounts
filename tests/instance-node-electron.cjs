@@ -1,7 +1,7 @@
 'use strict';
 const {app,BrowserWindow}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-instance-node-test-'));app.setPath('userData',root);
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-instance-node-test-'));app.setPath('userData',root);
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{TARGETS}=require('../src/main/diagnostics.cjs'),{Store}=require('../src/main/store.cjs'),{DiagnosticHistory}=require('../src/main/diagnostic-history.cjs');
 let win,c,server,proxy;const results=[],errors=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const wait=async(fn,label)=>{for(let i=0;i<400;i++){if(await fn())return;await sleep(30);}throw Error('Timeout: '+label);};const ok=name=>{results.push(name);console.log('PASS '+name);};

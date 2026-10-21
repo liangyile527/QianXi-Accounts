@@ -40,7 +40,7 @@ async function measure(label, wc, port) {
   const before = wc.getWebRTCIPHandlingPolicy();
   const policy = wc.getWebRTCIPHandlingPolicy();
   const u = udpRequests, h = httpRequests;
-  await wc.loadURL('http://facet-webrtc.test/' + label);
+  await wc.loadURL('http://qianxi-webrtc.test/' + label);
   const ice = await wc.executeJavaScript('window.__ice');
   report.results.push({label, before, policy, httpViaProxy: httpRequests-h, udpRequests: udpRequests-u, ...ice});
 }
@@ -60,7 +60,7 @@ app.whenReady().then(async () => {
     proxy=http.createServer((req,res)=>{
       httpRequests++;
       res.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store'});
-      const target=new URL(req.url,'http://facet-webrtc.test');
+      const target=new URL(req.url,'http://qianxi-webrtc.test');
       const iframe=target.pathname==='/instance-view'?'<iframe src="http://other-webrtc.test/frame"></iframe>':'';
       res.end('<!doctype html><title>Local WebRTC isolation probe</title><script>window.__label='+JSON.stringify(target.pathname)+';window.__ice='+gather(stun.address().port)+';</script><body>'+iframe+'</body>');
     });
@@ -82,13 +82,13 @@ app.whenReady().then(async () => {
     view.webContents.setWindowOpenHandler(()=>({action:'allow',overrideBrowserWindowOptions:{show:false,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}}}));
     const opened=new Promise(resolve=>view.webContents.once('did-create-window',resolve));
     const beforePopupUdp=udpRequests,beforePopupHTTP=httpRequests;
-    await view.webContents.executeJavaScript(`window.open('http://facet-webrtc.test/real-window-open','_blank','width=400,height=300');0`,true);
+    await view.webContents.executeJavaScript(`window.open('http://qianxi-webrtc.test/real-window-open','_blank','width=400,height=300');0`,true);
     const child=await opened;wins.push(child);pages.push(child.webContents);
     report.popupSameSession=child.webContents.session===s;
     // The page's FIRST inline script starts ICE; no late did-create-window policy patch.
     const pwc=child.webContents;
     for(let i=0;i<200;i++){
-      if(!pwc.isLoading()&&pwc.getURL()==='http://facet-webrtc.test/real-window-open')break;
+      if(!pwc.isLoading()&&pwc.getURL()==='http://qianxi-webrtc.test/real-window-open')break;
       await new Promise(resolve=>setTimeout(resolve,25));
     }
     assert.equal(await pwc.executeJavaScript('window.__label'),'/real-window-open');
@@ -101,10 +101,10 @@ app.whenReady().then(async () => {
     const other=session.fromPartition('webrtc-other-'+Date.now());
     await other.setProxy({mode:'fixed_servers',proxyRules:'http://127.0.0.1:'+proxy.address().port,proxyBypassRules:'<-loopback>'});
     const otherWin=new BrowserWindow({show:false,webPreferences:{session:other,sandbox:true,contextIsolation:true,nodeIntegration:false}});wins.push(otherWin);pages.push(otherWin.webContents);
-    await otherWin.loadURL('http://facet-webrtc.test/other');
-    const first=await view.webContents.executeJavaScript(`document.cookie='facet_isolation=A; path=/';localStorage.setItem('facet_isolation','A');({cookie:document.cookie.includes('facet_isolation=A'),storage:localStorage.getItem('facet_isolation')})`);
-    const second=await otherWin.webContents.executeJavaScript(`({cookie:document.cookie.includes('facet_isolation=A'),storage:localStorage.getItem('facet_isolation')})`);
-    const shared=await popup.webContents.executeJavaScript(`({cookie:document.cookie.includes('facet_isolation=A'),storage:localStorage.getItem('facet_isolation')})`);
+    await otherWin.loadURL('http://qianxi-webrtc.test/other');
+    const first=await view.webContents.executeJavaScript(`document.cookie='qianxi_isolation=A; path=/';localStorage.setItem('qianxi_isolation','A');({cookie:document.cookie.includes('qianxi_isolation=A'),storage:localStorage.getItem('qianxi_isolation')})`);
+    const second=await otherWin.webContents.executeJavaScript(`({cookie:document.cookie.includes('qianxi_isolation=A'),storage:localStorage.getItem('qianxi_isolation')})`);
+    const shared=await popup.webContents.executeJavaScript(`({cookie:document.cookie.includes('qianxi_isolation=A'),storage:localStorage.getItem('qianxi_isolation')})`);
     report.storage={writtenInA:first,independentPartitionB:second,samePartitionPopup:shared,
       isolated:first.cookie&&first.storage==='A'&&!second.cookie&&second.storage===null&&shared.cookie&&shared.storage==='A'};
     await otherWin.webContents.executeJavaScript('window.__ice');

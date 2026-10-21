@@ -1,4 +1,4 @@
-package com.facet.browser.prototype;
+package com.qianxi.browser.prototype;
 
 import android.app.*;
 import android.os.Bundle;

@@ -12,13 +12,13 @@ app.whenReady().then(async()=>{try{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  win=new BrowserWindow({width:1280,height:860,show:true,webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true,backgroundThrottling:false}});await win.loadURL('about:blank');
  c=new Controller(win,root,path.join(__dirname,'../resources/mihomo',process.platform==='win32'?'mihomo.exe':'mihomo'));
- const a=c.store.list()[0]||c.store.create('Popup fixture');c.store.update(a.id,{url:url+'/home',network:{mode:'direct',nodeName:''},environment:{...c.store.get(a.id).environment,timezone:'Pacific/Auckland',language:'en-GB',userAgent:'FacetPopupUA/1.0'}});
+ const a=c.store.list()[0]||c.store.create('Popup fixture');c.store.update(a.id,{url:url+'/home',network:{mode:'direct',nodeName:''},environment:{...c.store.get(a.id).environment,timezone:'Pacific/Auckland',language:'en-GB',userAgent:'QianXiPopupUA/1.0'}});
  await c.start(a.id);const r=c.runtimes.get(a.id),wc=r.view.webContents;await wait(()=>wc.getURL()===url+'/home'&&!wc.isLoading(),'home loaded');
  const inMain=code=>wc.executeJavaScript(code,true);const popups=()=>[...(r.popups||[])].filter(w=>!w.isDestroyed());
  await inMain(`window.open(${JSON.stringify(url+'/popup?first')},'login','popup,width=480,height=560');true`);
  await wait(()=>popups().length===1,'popup window');const pop=popups()[0],pwc=pop.webContents;await wait(async()=>(await inMain('window.__msgs.length'))>0,'popup reported through opener');
- const msg=(await inMain('window.__msgs'))[0];assert.deepEqual(msg,{tz:'Pacific/Auckland',lang:'en-GB',ua:'FacetPopupUA/1.0',path:'/popup?first'});
- const last=hits.filter(h=>h.url==='/popup?first').at(-1);assert.equal(last.ua,'FacetPopupUA/1.0');assert.match(last.lang,/^en-GB/);
+ const msg=(await inMain('window.__msgs'))[0];assert.deepEqual(msg,{tz:'Pacific/Auckland',lang:'en-GB',ua:'QianXiPopupUA/1.0',path:'/popup?first'});
+ const last=hits.filter(h=>h.url==='/popup?first').at(-1);assert.equal(last.ua,'QianXiPopupUA/1.0');assert.match(last.lang,/^en-GB/);
  assert.equal(pwc.session,wc.session,'same login session');assert.equal(pop.getParentWindow(),win);assert.equal(wc.getURL(),url+'/home','main page stays put');assert.equal(BrowserWindow.getAllWindows().length,2);
  ok('window.open popup is an independent window with the instance timezone, language, UA, session and a working opener');
  await pwc.executeJavaScript(`window.open(${JSON.stringify(url+'/nested')});true`,true);await wait(()=>pwc.getURL()===url+'/nested','nested open stays in popup');assert.equal(popups().length,1);assert.equal(wc.getURL(),url+'/home');

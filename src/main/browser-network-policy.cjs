@@ -42,7 +42,7 @@ function isInstanceSession(ses) {
 function deferDictionaries(ses) {
   if (pending.has(ses)) return;
   const storage = ses.getStoragePath();
-  const file = storage ? path.join(storage, 'facet-pending-dictionaries.json') : null;
+  const file = storage ? path.join(storage, 'qianxi-pending-dictionaries.json') : null;
   let languages = ses.getSpellCheckerLanguages();
   if (file && fs.existsSync(file)) {
     let recorded;

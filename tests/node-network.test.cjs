@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {NodeNetwork,DEFAULTS,normalize,fakeAddress,pickInterface,readInterfaces}=require('../src/main/node-network.cjs');
 const {configuration,Mihomo}=require('../src/main/mihomo.cjs');
-const temp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'facet-node-network-test-'));
+const temp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-node-network-test-'));
 test('new network settings preserve routes and persist with backup',async()=>{
  const dir=temp();try{const n=new NodeNetwork(dir);assert.deepEqual(n.settings,DEFAULTS);assert(!fs.existsSync(n.file));await n.save({dnsMode:'secure',routeMode:'system'});assert.equal(new NodeNetwork(dir).settings.dnsMode,'secure');await n.save({...DEFAULTS});assert.equal(JSON.parse(fs.readFileSync(n.file+'.bak')).dnsMode,'secure');}finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
@@ -30,5 +30,5 @@ test('aborted preparations never create a core process',async()=>{
  const dir=temp();try{const n=new NodeNetwork(dir),abort=new AbortController();abort.abort();await assert.rejects(n.prepare({server:'www.cloudflare.com'},abort.signal));}finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('actual Windows interface inventory has stable identifiers and missing selection is rejected',{skip:process.platform!=='win32'},async()=>{
- const dir=temp();try{const rows=await readInterfaces();assert(rows.length);assert(rows.every(r=>Number.isSafeInteger(r.index)&&r.name));const n=new NodeNetwork(dir);await assert.rejects(n.save({dnsMode:'auto',routeMode:'interface',interfaceName:'Facet missing interface test'}),/未回退/);assert(!fs.existsSync(n.file));}finally{fs.rmSync(dir,{recursive:true,force:true});}
+ const dir=temp();try{const rows=await readInterfaces();assert(rows.length);assert(rows.every(r=>Number.isSafeInteger(r.index)&&r.name));const n=new NodeNetwork(dir);await assert.rejects(n.save({dnsMode:'auto',routeMode:'interface',interfaceName:'QianXi missing interface test'}),/未回退/);assert(!fs.existsSync(n.file));}finally{fs.rmSync(dir,{recursive:true,force:true});}
 });

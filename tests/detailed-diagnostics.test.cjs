@@ -6,7 +6,7 @@ const {downloadSubscription}=require('../src/main/subscription.cjs');
 const {resolvePublicHost}=require('../src/main/subscription-policy.cjs');
 const {buildDiagnosticBundle,exportDiagnosticBundle}=require('../src/main/diagnostic-bundle.cjs');
 const {Library}=require('../src/main/library.cjs'),{Store}=require('../src/main/store.cjs');
-function temporary(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-detailed-diagnostics-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
+function temporary(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-detailed-diagnostics-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
 async function server(t,handler,tls=false){const s=tls?https.createServer({key:fs.readFileSync(path.join(__dirname,'fixtures/dns/key.pem')),cert:fs.readFileSync(path.join(__dirname,'fixtures/dns/cert.pem'))},handler):http.createServer(handler);await new Promise(resolve=>s.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>{s.closeAllConnections();s.close(resolve);}));return (tls?'https':'http')+'://127.0.0.1:'+s.address().port;}
 const minimal={versions:{app:'test',electron:'test'},instances:[]};
 test('runtime output preserves two launches, split UTF-8, source IDs and credentials redaction',t=>{

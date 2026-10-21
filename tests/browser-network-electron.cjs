@@ -36,7 +36,7 @@ function track(server) {
   return server;
 }
 async function listen(server) { track(server); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); return server.address().port; }
-const suffix = 'facet-dns.invalid';
+const suffix = 'qianxi-dns.invalid';
 function hints(label) {
   return `<link rel="dns-prefetch" href="//html-${label}.${suffix}">
     <link rel="preconnect" href="https://preconnect-${label}.${suffix}">
@@ -102,7 +102,7 @@ app.whenReady().then(async () => {
     if (!['baseline', 'guarded'].includes(mode)) {
       const partition = 'persist:arena-core-11111111-1111-4111-8111-111111111111';
       const s = session.fromPartition(partition);
-      const journal = path.join(s.getStoragePath(), 'facet-pending-dictionaries.json');
+      const journal = path.join(s.getStoragePath(), 'qianxi-pending-dictionaries.json');
       const languages = ['en-US', 'de'];
       if (mode === 'seed') {
         await s.setProxy({mode: 'fixed_servers', proxyRules: 'http://127.0.0.1:1', proxyBypassRules: '<-loopback>'});
@@ -153,7 +153,7 @@ app.whenReady().then(async () => {
           controller.store.saveNodes(x.id, [up.node], null); controller.store.update(x.id, {url: 'http://page.' + suffix + '/main'});
           // Pre-create while guarded to validate eager dictionary prevention and language preservation.
           const s = session.fromPartition('persist:arena-core-' + x.id); trustFixture(s);
-          const languages = JSON.parse(fs.readFileSync(path.join(s.getStoragePath(), 'facet-pending-dictionaries.json'))).languages;
+          const languages = JSON.parse(fs.readFileSync(path.join(s.getStoragePath(), 'qianxi-pending-dictionaries.json'))).languages;
           assert.deepEqual(s.getSpellCheckerLanguages(), []);
           await sleep(250); assert.equal(up.requests.length, 0, 'no pre-proxy dictionary request');
           await controller.start(x.id); const r = controller.runtimes.get(x.id);
@@ -198,7 +198,7 @@ app.whenReady().then(async () => {
         assert.deepEqual(failedRuntime.session.getSpellCheckerLanguages(), []);
         const damaged = controller.store.create('damaged-recovery', {mode: 'mihomo', nodeName: a.node.name});
         controller.store.saveNodes(damaged.id, [a.node], null);
-        const damagedFile = path.join(profile, 'Partitions', 'arena-core-' + damaged.id, 'facet-pending-dictionaries.json');
+        const damagedFile = path.join(profile, 'Partitions', 'arena-core-' + damaged.id, 'qianxi-pending-dictionaries.json');
         fs.mkdirSync(path.dirname(damagedFile), {recursive: true}); fs.writeFileSync(damagedFile, '{bad-json');
         await assert.rejects(controller.start(damaged.id), /拼写词典恢复记录/);
         assert.equal(fs.readFileSync(damagedFile, 'utf8'), '{bad-json');

@@ -1,11 +1,11 @@
 {
-  "name": "facet",
+  "name": "qianxi",
   "version": "0.0.1",
   "private": true,
   "description": "Privacy-focused multi-instance browser with a built-in AI assistant, isolated sessions and per-instance proxies",
   "author": "HEYD66",
   "license": "MIT",
-  "homepage": "https://github.com/HEYD66/facet",
+  "homepage": "https://github.com/momoqiqi-qwq/QianXi-Accounts",
   "main": "src/main/main.cjs",
   "scripts": {
     "build:installer": "node scripts/build-installer.cjs",

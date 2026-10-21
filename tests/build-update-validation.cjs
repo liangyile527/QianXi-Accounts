@@ -1,5 +1,5 @@
 'use strict';
-// Real NSIS installers under a separate application identity; never replace a live Facet installation.
+// Real NSIS installers under a separate application identity; never replace a live QianXi installation.
 const path=require('node:path');
 const {resolveRuntime,childEnvironment}=require('../scripts/electron-runtime.cjs');
 const {verifyArtifacts}=require('../scripts/build-installer.cjs');
@@ -10,6 +10,6 @@ async function main(){
  verifyArtifacts();const {build,Platform}=require('electron-builder'),{Arch}=require('builder-util');
  const runtime=resolveRuntime({executable:require('electron'),version:require('electron/package.json').version,env:childEnvironment()});delete process.env.ELECTRON_RUN_AS_NODE;process.env.CSC_IDENTITY_AUTO_DISCOVERY='false';
  const base=require('../electron-builder.config.cjs');
- await build({projectDir:path.resolve(__dirname,'..'),targets:Platform.WINDOWS.createTarget('nsis',Arch.x64),publish:'never',config:{...base,appId:'Facet.OnlineUpdateValidation',productName:'千面在线更新验证',executableName:'FacetUpdateTest',extraMetadata:{name:'facet-online-update-validation',version},directories:{...base.directories,output:'release/update-validation/'+version},electronDist:path.dirname(runtime),electronVersion:require('electron/package.json').version,publish:[{provider:'generic',url:'http://127.0.0.1:34279/',useMultipleRangeRequest:false}],nsis:{...base.nsis,shortcutName:'千面在线更新验证',createDesktopShortcut:false,createStartMenuShortcut:false}}});
+ await build({projectDir:path.resolve(__dirname,'..'),targets:Platform.WINDOWS.createTarget('nsis',Arch.x64),publish:'never',config:{...base,appId:'QianXi.OnlineUpdateValidation',productName:'千禧accounts在线更新验证',executableName:'QianXiUpdateTest',extraMetadata:{name:'qianxi-online-update-validation',version},directories:{...base.directories,output:'release/update-validation/'+version},electronDist:path.dirname(runtime),electronVersion:require('electron/package.json').version,publish:[{provider:'generic',url:'http://127.0.0.1:34279/',useMultipleRangeRequest:false}],nsis:{...base.nsis,shortcutName:'千禧accounts在线更新验证',createDesktopShortcut:false,createStartMenuShortcut:false}}});
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;});

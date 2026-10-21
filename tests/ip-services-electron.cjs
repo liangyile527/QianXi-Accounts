@@ -1,6 +1,6 @@
 'use strict';
 const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),assert=require('node:assert/strict');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'facet-ip-services-'));app.setPath('userData',root);app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-ip-services-'));app.setPath('userData',root);app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const {Controller}=require('../src/main/controller.cjs'),{installIPC}=require('../src/main/ipc.cjs'),{PROVIDERS}=require('../src/main/ip-services.cjs'),{Store}=require('../src/main/store.cjs');
 const report={root,results:[],errors:[]},proxies=[],hits=[];let win,c,allFailed=false,changed=false,manualItalian=false;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),pass=name=>{report.results.push(name);console.log('PASS '+name);};

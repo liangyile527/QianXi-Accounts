@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),net=require('node:net'),assert=require('node:assert/strict'),{spawn,spawnSync}=require('node:child_process');
 const [executable,output]=process.argv.slice(2);if(!output)throw Error('Usage: node tests/extension-actions-packaged.cjs EXE OUTPUT');
-fs.mkdirSync(output,{recursive:true});const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'facet-extension-actions-')),checks=[],clients=new Set(),processes=[];let port,server;
+fs.mkdirSync(output,{recursive:true});const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'qianxi-extension-actions-')),checks=[],clients=new Set(),processes=[];let port,server;
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function wait(fn,label){const end=Date.now()+25000;let last;while(Date.now()<end){try{const result=await fn();if(result)return result;}catch(e){last=e;}await pause(150);}throw Error('Timeout '+label+(last?': '+last.message:''));}
 class CDP{

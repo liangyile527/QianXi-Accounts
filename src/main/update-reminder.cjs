@@ -8,8 +8,8 @@ function showUpdateReminder(parent,{version,currentVersion,releaseNotes='',onSho
  const promise=new Promise((resolve,reject)=>{
   let child,shown=false,settled=false,timer;
   const finish=(response=1,error)=>{
-   if(settled)return;settled=true;clearTimeout(timer);ipcMain.removeListener('facet:update-reminder-answer',answer);parent.removeListener('closed',cancel);
-   ipcMain.removeListener('facet:update-reminder-project',openProject);
+   if(settled)return;settled=true;clearTimeout(timer);ipcMain.removeListener('qianxi:update-reminder-answer',answer);parent.removeListener('closed',cancel);
+   ipcMain.removeListener('qianxi:update-reminder-project',openProject);
    if(child&&!child.isDestroyed())child.destroy();
    if(error)reject(error);else resolve({shown,response});
   };
@@ -18,13 +18,13 @@ function showUpdateReminder(parent,{version,currentVersion,releaseNotes='',onSho
    if(!child||child.isDestroyed()||event.sender!==child.webContents||event.senderFrame!==child.webContents.mainFrame||![0,1].includes(value?.response))return;
    finish(value.response);
   };
-  const openProject=(event)=>{if(!child||child.isDestroyed()||event.sender!==child.webContents||event.senderFrame!==child.webContents.mainFrame)return;require('electron').shell.openExternal('https://github.com/HEYD66/facet').catch(()=>{});};
+  const openProject=(event)=>{if(!child||child.isDestroyed()||event.sender!==child.webContents||event.senderFrame!==child.webContents.mainFrame)return;require('electron').shell.openExternal('https://github.com/momoqiqi-qwq/QianXi-Accounts').catch(()=>{});};
   try{
-   child=new BrowserWindow({parent,modal:true,show:false,width:600,height:560,useContentSize:true,frame:false,resizable:false,minimizable:false,maximizable:false,skipTaskbar:true,title:'千禧accounts 有新版本',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'update-reminder-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,partition:'facet-update-reminder'}});
+   child=new BrowserWindow({parent,modal:true,show:false,width:600,height:560,useContentSize:true,frame:false,resizable:false,minimizable:false,maximizable:false,skipTaskbar:true,title:'千禧accounts 有新版本',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'update-reminder-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,partition:'qianxi-update-reminder'}});
    child.webContents.setWindowOpenHandler(()=>({action:'deny'}));child.webContents.on('will-navigate',event=>event.preventDefault());
    child.webContents.session.setPermissionRequestHandler((_wc,_permission,cb)=>cb(false));child.webContents.session.setPermissionCheckHandler(()=>false);
-   child.webContents.once('render-process-gone',cancel);child.once('closed',cancel);parent.once('closed',cancel);ipcMain.on('facet:update-reminder-answer',answer);
-   timer=setTimeout(cancel,10000);timer.unref?.();ipcMain.on('facet:update-reminder-project',openProject);
+   child.webContents.once('render-process-gone',cancel);child.once('closed',cancel);parent.once('closed',cancel);ipcMain.on('qianxi:update-reminder-answer',answer);
+   timer=setTimeout(cancel,10000);timer.unref?.();ipcMain.on('qianxi:update-reminder-project',openProject);
    (async()=>{
     let theme={};try{let themeTimer;try{theme=await Promise.race([parent.webContents.executeJavaScript('({theme:document.documentElement.dataset.theme,lightPalette:document.documentElement.dataset.lightPalette,darkPalette:document.documentElement.dataset.darkPalette})'),new Promise(r=>{themeTimer=setTimeout(()=>r({}),700);})]);}finally{clearTimeout(themeTimer);}}catch{}
     if(settled)return;
