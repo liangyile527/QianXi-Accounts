@@ -13,3 +13,7 @@ Thumbs.db
 .env
 .env.*
 .tmp-asar.cjs
+
+# Local working artifacts
+tmp/
+/icon-preview-*.png
