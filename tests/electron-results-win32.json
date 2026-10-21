@@ -1,0 +1,39 @@
+{
+  "platform": "win32",
+  "electron": "44.4.5",
+  "passed": 7,
+  "results": [
+    {
+      "name": "Production preload/IPC initializes real renderer",
+      "passed": true
+    },
+    {
+      "name": "No nodes: two real direct instances run concurrently",
+      "passed": true
+    },
+    {
+      "name": "Cookies and localStorage isolated between instances",
+      "passed": true
+    },
+    {
+      "name": "Per-instance timezone/language; remote pages have no Node or control bridge",
+      "passed": true
+    },
+    {
+      "name": "Renderer tab activation positions the native browser view",
+      "passed": true
+    },
+    {
+      "name": "Production UI settings IPC saves only its target and stops it safely",
+      "passed": true
+    },
+    {
+      "name": "No-op and invalid settings preserve the existing running browser",
+      "passed": true
+    }
+  ],
+  "scale": null,
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at D:\\AProgram\\arena\\arena多账户控制台\\arena-core\\tests\\electron-smoke.cjs:23:171"
+  ]
+}

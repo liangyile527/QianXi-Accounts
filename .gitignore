@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+*.log
+.DS_Store
+/Facet.lnk
+# Local unfinished work and personal notes are not release sources.
+/src/main/subscription-proxy.cjs
+/.local-dev/
+# DSH tooling artifacts
+.dsh-vision-router/
+Thumbs.db
+.env
+.env.*
+.tmp-asar.cjs

@@ -1,0 +1,14 @@
+{
+  "platform": "win32",
+  "electron": "44.4.5",
+  "passed": 6,
+  "results": [
+    "Consecutive same-colour labels merge into one framed group; uncoloured labels stay flat",
+    "Clearing a colour drops the field instead of persisting an empty value",
+    "Manager swatches recolour a saved shortcut in one click",
+    "Plus button adds any HTTP site with a colour through production IPC",
+    "All-sites panel lists every shortcut in several columns and opens it in the current instance",
+    "Bar scrolls by dragging left and right, ignores the trailing click and keeps its offset across re-render"
+  ],
+  "errors": []
+}
