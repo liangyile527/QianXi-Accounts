@@ -1,0 +1,15 @@
+{
+  "platform": "win32",
+  "backend": "actual Chromium + real ui.css; simulated IPC and runtime",
+  "passed": 7,
+  "results": [
+    "Switching a tab bar behind the open panel defers the strip animation instead of playing it unseen",
+    "Closing the panel plays a forward strip animation with staggered items that settles without leftovers",
+    "Switching back animates from the opposite side and restores the previous tab bar",
+    "A bar row is itself the switch target, drag reorders instead of switching, and row buttons never switch",
+    "The panel still closes synchronously, including by Escape, so animation never blocks input",
+    "Dragging a shortcut pans the strip, while holding it first lifts a ghost and reorders",
+    "Reduced motion disables every strip and dialog animation while switching still works"
+  ],
+  "errors": []
+}

@@ -1,6 +1,6 @@
 {
   "name": "qianxi",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "Privacy-focused multi-instance browser with a built-in AI assistant, isolated sessions and per-instance proxies",
   "author": "HEYD66",
@@ -43,6 +43,7 @@
     "test:auto-click": "node scripts/launch-electron.cjs tests/auto-click.cjs",
     "test:privacy-sites": "node scripts/launch-electron.cjs tests/privacy-sites-electron.cjs",
     "test:appearance-ui": "node tests/appearance-audit.cjs",
+    "test:ui-motion": "node tests/ui-motion.cjs",
     "test:extensions": "node --test tests/extensions.test.cjs tests/extension-dnr-rulesets.test.cjs",
     "test:extension-dnr": "node --test tests/extension-dnr-rulesets.test.cjs",
     "test:extensions-electron": "node scripts/launch-electron.cjs tests/extensions-electron.cjs",
@@ -86,4 +87,3 @@
     "unzipper": "0.12.5"
   }
 }
-

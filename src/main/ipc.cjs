@@ -45,6 +45,7 @@ function installIPC(window,controller){
     case 'quick-bar-save':controller.workspace.saveQuickBar(message.bar||{});controller.emit();break;
     case 'quick-bar-remove':controller.workspace.removeQuickBar(message.barId);controller.emit();break;
     case 'quick-bar-activate':controller.workspace.activateQuickBar(message.barId);controller.emit();break;
+    case 'quick-bar-reorder':controller.workspace.reorderQuickBars(message.barIds);controller.emit();break;
     case 'quick-link-remove':controller.workspace.removeQuickLink(message.linkId);controller.emit();break;
     case 'quick-link-move':controller.workspace.moveQuickLink(message.linkId,message.direction);controller.emit();break;
     case 'quick-link-reorder':controller.workspace.reorderQuickLinks(message.ids);controller.emit();break;

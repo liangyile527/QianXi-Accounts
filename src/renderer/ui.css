@@ -769,9 +769,17 @@ html[data-frame="custom"] .toast{top:80px}
 .quick-tabs-head{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .quick-bar-rows{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:var(--r)}
 .quick-bar-rows:empty{display:none}
-.quick-bar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.quick-bar-row{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;touch-action:pan-y;transition:background var(--motion) linear,box-shadow var(--motion) linear}
+.quick-bar-row:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
+.quick-bar-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .quick-bar-row:last-child{border-bottom:0}
-.quick-bar-row>div:first-child{flex:1;min-width:0}
+.quick-bar-grip{flex:0 0 auto;width:8px;height:16px;opacity:.32;background-image:radial-gradient(currentColor 1px,transparent 1.2px);background-size:4px 5px;background-position:center;background-repeat:repeat}
+.quick-bar-row:hover .quick-bar-grip{opacity:.5}
+.quick-bar-label{flex:1;min-width:0}
+.quick-bar-row.dragging{z-index:2;background:var(--panel);box-shadow:0 10px 24px color-mix(in srgb,#000 26%,transparent);cursor:grabbing}
+.quick-bar-row.dragging .quick-bar-grip{opacity:.75}
+body.quick-bar-dragging{cursor:grabbing}
+body.quick-bar-dragging .quick-bar-row{cursor:grabbing}
 .quick-bar-row b{font-size:13px;font-weight:600}
 .quick-bar-row small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
 .quick-bar-row .subscription-actions{flex:0 0 auto;gap:4px}
@@ -1001,3 +1009,41 @@ html[data-frame="custom"] .toast{top:80px}
 .quick-tab-menu-colors .quick-row-colors{flex:1 1 auto;gap:4px;justify-content:flex-start}
 .quick-tab-menu-colors .quick-color{width:16px;height:16px;border-radius:8px}
 .quick-tab-menu-colors .quick-color.none::after{font-size:10px;line-height:13px}
+
+/* ── 交互运动：切换、弹层、按下反馈 ──────────────────────────────
+   时长档位和曲线取自 U-Time 的 interactions.css（100 / 150 / 220ms + 出缓），
+   全部挂在 transform / opacity 上，不进布局；prefers-reduced-motion 下整体关闭。 */
+:root{--motion-fast:100ms;--motion:150ms;--motion-slow:220ms;--ease-out:cubic-bezier(.16,1,.3,1);--ease-pop:cubic-bezier(.34,1.32,.5,1)}
+@keyframes qh-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes qh-dialog-in{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+@keyframes qh-menu-in{from{opacity:0;transform:translate3d(0,-4px,0) scale(.97)}to{opacity:1;transform:none}}
+@keyframes qh-swap-in{from{opacity:0;transform:translate3d(0,0,0)}to{opacity:1;transform:none}}
+@keyframes qh-item-in{from{opacity:0;transform:translate3d(var(--swap-x,0),2px,0) scale(.94)}to{opacity:1;transform:none}}
+@keyframes qh-pill-pop{0%{opacity:0;transform:scale(.7)}60%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+/* 弹层：只做入场。关闭保持同步，Escape / 点「关闭」立刻收起，不拖泥带水。 */
+dialog[open]{animation:qh-dialog-in var(--motion-slow) var(--ease-out) both}
+dialog[open]::backdrop{animation:qh-fade-in var(--motion) linear both}
+.quick-tab-menu{animation:qh-menu-in var(--motion-fast) var(--ease-out) both}
+/* 切换标签栏：整条列表淡入，图标按顺序从切换方向依次落位（最多排 8 个，多的不再延迟）。 */
+.quick-site-list.quick-swap-forward,.quick-site-list.quick-swap-backward,.quick-site-list.quick-swap-plain{animation:qh-swap-in var(--motion) linear both}
+.quick-site-list.quick-swap-forward{--swap-x:10px}
+.quick-site-list.quick-swap-backward{--swap-x:-10px}
+.quick-site-list.quick-swap-plain{--swap-x:0px}
+.quick-site-list.quick-swap-forward>.quick-site,.quick-site-list.quick-swap-forward>.quick-group,.quick-site-list.quick-swap-backward>.quick-site,.quick-site-list.quick-swap-backward>.quick-group,.quick-site-list.quick-swap-plain>.quick-site,.quick-site-list.quick-swap-plain>.quick-group{animation:qh-item-in var(--motion-slow) var(--ease-out) both}
+.quick-site-list.quick-swap-forward>:nth-child(1),.quick-site-list.quick-swap-backward>:nth-child(1),.quick-site-list.quick-swap-plain>:nth-child(1){animation-delay:0ms}
+.quick-site-list.quick-swap-forward>:nth-child(2),.quick-site-list.quick-swap-backward>:nth-child(2),.quick-site-list.quick-swap-plain>:nth-child(2){animation-delay:18ms}
+.quick-site-list.quick-swap-forward>:nth-child(3),.quick-site-list.quick-swap-backward>:nth-child(3),.quick-site-list.quick-swap-plain>:nth-child(3){animation-delay:36ms}
+.quick-site-list.quick-swap-forward>:nth-child(4),.quick-site-list.quick-swap-backward>:nth-child(4),.quick-site-list.quick-swap-plain>:nth-child(4){animation-delay:54ms}
+.quick-site-list.quick-swap-forward>:nth-child(5),.quick-site-list.quick-swap-backward>:nth-child(5),.quick-site-list.quick-swap-plain>:nth-child(5){animation-delay:72ms}
+.quick-site-list.quick-swap-forward>:nth-child(6),.quick-site-list.quick-swap-backward>:nth-child(6),.quick-site-list.quick-swap-plain>:nth-child(6){animation-delay:90ms}
+.quick-site-list.quick-swap-forward>:nth-child(7),.quick-site-list.quick-swap-backward>:nth-child(7),.quick-site-list.quick-swap-plain>:nth-child(7){animation-delay:108ms}
+.quick-site-list.quick-swap-forward>:nth-child(n+8),.quick-site-list.quick-swap-backward>:nth-child(n+8),.quick-site-list.quick-swap-plain>:nth-child(n+8){animation-delay:124ms}
+.quick-bar-row{transition:background var(--motion) linear}
+.quick-bar-row .quick-bar-pill{animation:qh-pill-pop var(--motion-slow) var(--ease-pop) both}
+/* 按下反馈：所有可点选项都给一点位移，让「切换」有手感。 */
+.btn:active:not(:disabled),.quick-add:active,.quick-all:active,.quick-tabs:active,.quick-site:active,.quick-all-item:active,.quick-tab-menu>button:active{transform:translateY(1px) scale(.97);transition-duration:60ms}
+.quick-site.quick-dragging:active{transform:none}
+@media (prefers-reduced-motion:reduce){
+ dialog[open],dialog[open]::backdrop,.quick-tab-menu,.quick-site-list.quick-swap-forward,.quick-site-list.quick-swap-backward,.quick-site-list.quick-swap-plain,.quick-site-list.quick-swap-forward>*,.quick-site-list.quick-swap-backward>*,.quick-site-list.quick-swap-plain>*,.quick-bar-row,.quick-bar-row .quick-bar-pill{animation:none!important;transition:none!important}
+ .btn:active:not(:disabled),.quick-add:active,.quick-all:active,.quick-tabs:active,.quick-site:active,.quick-all-item:active,.quick-tab-menu>button:active{transform:none!important}
+}
