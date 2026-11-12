@@ -15,6 +15,7 @@
 - 删除实例、修改网络/DNS、覆盖配置或批量操作前，先做只读盘点并保留可回滚点。
 - 代码修改后至少运行 `npm.cmd run check`、`npm.cmd run test:control-api` 和 `git diff --check`；未通过时不得声称完成。
 - 文件选择和原生确认框的自动化边界，以接手说明中的限制为准。
+- **每次构建出 exe 后，必须立刻把本机在用版本更新为新版本**：只要 `release/` 里产生了新的安装包或免安装 exe（不论由 `build:installer`、`release:local`、`electron-builder` 直跑还是手工打包产生），同一轮里就要执行 `npm.cmd run install:latest` 关闭旧进程、覆盖安装、启动新版并校验进程存在；构建完只留文件不装机＝这一轮没做完。
 
 ## 生成 exe 后的收尾（强制）
 

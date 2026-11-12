@@ -17,7 +17,10 @@ test('public product links, updater feed and package metadata use QianXi',()=>{
 test('no legacy brand token survives in shipped sources',()=>{
  // 旧品牌串按片段拼接，避免本测试自己把旧字样带回仓库。
  const legacy=new RegExp('(?<![A-Za-z])'+['fa','cet'].join(''),'i');
- const skip=new Set(['node_modules','.git','release','dist','.dsh-vision-router']);
+ // tmp/ holds scratch copies and local diagnostics (e.g. upstream reference checkouts); it is never shipped.
+  // docs/ records upstream provenance by name and tmp/ holds scratch copies; neither is packaged
+ // (electron-builder ships src/**, package.json, LICENSE, README.md), so neither is a shipped source.
+ const skip=new Set(['node_modules','.git','release','dist','.dsh-vision-router','tmp','docs']);
  const walk=(dir,out=[])=>{
   for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
    if(skip.has(entry.name))continue;

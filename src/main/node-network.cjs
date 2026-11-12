@@ -53,8 +53,10 @@ function readInterfaces() {
   const executable = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32/WindowsPowerShell/v1.0/powershell.exe');
   // Read through Electron's asar-aware fs; PowerShell cannot open an asar path.
   const script = Buffer.from(fs.readFileSync(path.join(__dirname, 'network-interfaces.ps1'), 'utf8'), 'utf16le').toString('base64');
-  return new Promise((resolve, reject) => execFile(executable, ['-NoProfile', '-NonInteractive', '-EncodedCommand', script], {windowsHide: true, timeout: 8000, maxBuffer: 128 * 1024, encoding: 'utf8'}, (error, stdout) => {
-    if (error) return reject(safeError('读取网卡失败，请刷新重试或使用系统路由'));
+  return new Promise((resolve, reject) => execFile(executable, ['-NoProfile', '-NonInteractive', '-EncodedCommand', script], // First call on a cold machine loads the NetTCPIP module and can take ~7s
+  // (Defender scanning); 8s used to time out for real users on the very first click.
+  {windowsHide: true, timeout: 20000, maxBuffer: 128 * 1024, encoding: 'utf8'}, (error, stdout) => {
+    if (error) return reject(safeError(error.killed ? '读取网卡超时，请重试或改用系统路由' : '读取网卡失败，请刷新重试或使用系统路由'));
     try {
       const raw = JSON.parse(stdout.replace(/^\uFEFF/, '').trim());
       if (!Array.isArray(raw) || raw.length > 256) throw Error();

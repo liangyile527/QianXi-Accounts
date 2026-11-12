@@ -35,6 +35,28 @@ function syncDirectory(dir) {
   }
 }
 
+// Windows: an antivirus/indexer/sync client can hold a just-written file for a
+// few milliseconds, making rename fail with EPERM/EBUSY even though nothing in
+// this process still has it open. Retry those transient codes briefly instead of
+// surfacing a needless "配置写入失败" to the user.
+function renameWithRetry(from, to) {
+  const delays = [0, 15, 30, 60, 120, 250];
+  let last;
+  for (const delay of delays) {
+    if (delay) {
+      try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay); } catch { /* no SharedArrayBuffer: retry immediately */ }
+    }
+    try {
+      fs.renameSync(from, to);
+      return;
+    } catch (error) {
+      last = error;
+      if (!['EPERM', 'EBUSY', 'EACCES'].includes(error.code)) throw error;
+    }
+  }
+  throw last;
+}
+
 function atomic(file, data, { backup = true } = {}) {
   const json = JSON.stringify(data, null, 2);
   if (json === undefined) throw new TypeError('配置不能序列化为 JSON');
@@ -55,12 +77,12 @@ function atomic(file, data, { backup = true } = {}) {
       if (previous !== undefined) {
         // Never truncate the last known backup in place.
         writeSynced(backupTemp, previous);
-        fs.renameSync(backupTemp, file + '.bak');
+        renameWithRetry(backupTemp, file + '.bak');
         syncDirectory(dir);
         backupUpdated = true;
       }
     }
-    fs.renameSync(temp, file);
+    renameWithRetry(temp, file);
     committed = true;
     const directorySynced = syncDirectory(dir);
     return { fileSynced: true, directorySynced, backupUpdated };

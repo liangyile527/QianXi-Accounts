@@ -1047,3 +1047,37 @@ dialog[open]::backdrop{animation:qh-fade-in var(--motion) linear both}
  dialog[open],dialog[open]::backdrop,.quick-tab-menu,.quick-site-list.quick-swap-forward,.quick-site-list.quick-swap-backward,.quick-site-list.quick-swap-plain,.quick-site-list.quick-swap-forward>*,.quick-site-list.quick-swap-backward>*,.quick-site-list.quick-swap-plain>*,.quick-bar-row,.quick-bar-row .quick-bar-pill{animation:none!important;transition:none!important}
  .btn:active:not(:disabled),.quick-add:active,.quick-all:active,.quick-tabs:active,.quick-site:active,.quick-all-item:active,.quick-tab-menu>button:active{transform:none!important}
 }
+
+/* 页内查找栏：位于地址栏下方、浏览页面之上，只作用于当前实例的页面。 */
+.page-find{display:flex;align-items:center;gap:6px;height:38px;padding:0 10px;border-bottom:1px solid var(--line);background:var(--panel2);flex-shrink:0}
+.page-find>svg{width:15px;height:15px;color:var(--muted);flex:none}
+.page-find input{flex:1 1 auto;min-width:80px;height:26px;padding:0 8px;border:1px solid var(--line);border-radius:13px;background:var(--panel);color:var(--text);font:inherit;font-size:12px;outline:none}
+.page-find input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-weak)}
+.page-find-count{min-width:64px;text-align:right;color:var(--muted);font-size:11px;white-space:nowrap}
+.page-find .icon-btn{width:24px;height:24px;flex:none}
+.page-find .icon-btn svg{width:14px;height:14px}
+.page-find-down{display:inline-flex;transform:rotate(90deg)}
+/* 查找栏动效：从地址栏下沿落位，关闭时原路收回。只动 transform / opacity——
+   浏览器视图的 bounds 由 #browserHost 的矩形同步，动 height 会让网页与占位错开。
+   入场只在真正打开时播一次（is-entering），之后因状态刷新重建不再重放。 */
+.page-find.is-entering{animation:qh-find-in var(--motion) var(--ease-out) both}
+.page-find.is-closing{animation:qh-find-out var(--motion-fast) cubic-bezier(.55,0,.9,.4) both;pointer-events:none}
+.page-find input{transition:border-color var(--motion) linear,box-shadow var(--motion) linear}
+.page-find-count{transition:color var(--motion) linear;transform-origin:100% 50%}
+.page-find-count.is-tick{animation:qh-find-tick var(--motion) var(--ease-pop) both}
+/* 无结果：计数变红、输入框左右轻抖一次，让「一个都没找到」有明确的手感。 */
+.page-find.is-empty .page-find-count{color:var(--red)}
+.page-find.is-empty input{border-color:var(--red)}
+.page-find.is-empty input:focus{box-shadow:0 0 0 2px var(--red-weak)}
+.page-find input.is-shaking{animation:qh-find-shake var(--motion-slow) linear both}
+.page-find .icon-btn{transition:background var(--motion-fast) linear,color var(--motion-fast) linear,transform var(--motion-fast) var(--ease-out)}
+.page-find .icon-btn:active:not(:disabled){transform:translateY(1px) scale(.94);transition-duration:60ms}
+@keyframes qh-find-in{from{opacity:0;transform:translate3d(0,-6px,0)}to{opacity:1;transform:none}}
+@keyframes qh-find-out{from{opacity:1;transform:none}to{opacity:0;transform:translate3d(0,-4px,0)}}
+@keyframes qh-find-tick{0%{opacity:.4;transform:scale(.82)}70%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+@keyframes qh-find-shake{0%,100%{transform:none}18%{transform:translate3d(-2px,0,0)}36%{transform:translate3d(2px,0,0)}54%{transform:translate3d(-1.5px,0,0)}72%{transform:translate3d(1px,0,0)}}
+@media (prefers-reduced-motion:reduce){
+ .page-find.is-entering,.page-find.is-closing,.page-find-count.is-tick,.page-find input.is-shaking{animation:none!important}
+ .page-find input,.page-find-count,.page-find .icon-btn{transition:none!important}
+ .page-find .icon-btn:active:not(:disabled){transform:none!important}
+}

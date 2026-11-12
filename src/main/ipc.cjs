@@ -154,6 +154,9 @@ function installIPC(window,controller){
     case 'instance-remove-many':return {ok:true,value:await controller.queue('instance-delete',()=>require('./instance-bulk.cjs').removeMany(controller,message.ids))};
     case 'instance-reset-many':return {ok:true,value:await controller.queue('instance-reset',()=>require('./instance-bulk.cjs').resetMany(controller,message.ids))};
     case 'navigate':await controller.navigate(id,message.url);break;
+    case 'page-find-open':return {ok:true,value:require('./page-tools.cjs').open(controller,id,{text:message.text})};
+    case 'page-find':return {ok:true,value:require('./page-tools.cjs').search(controller,id,message.query,{forward:message.forward!==false,next:!!message.next})};
+    case 'page-find-close':return {ok:true,value:require('./page-tools.cjs').close(controller,id,{action:message.action==='clearSelection'?'clearSelection':'keepSelection',focusPage:message.focusPage!==false})};
     case 'toggle-devtools':return {ok:true,value:await controller.toggleDevTools(id)};
     case 'back':case 'forward':case 'reload':await controller.action(id,action);break;
     case 'settings':return {ok:true,value:await controller.settings(id,message.patch||{})};

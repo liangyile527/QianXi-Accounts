@@ -2,7 +2,7 @@
 // Password-free streaming archive with a corruption checksum and bounded extraction.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const {pipeline}=require('node:stream/promises'),{Readable,Transform}=require('node:stream');
-const MAGIC=Buffer.from('QIANXIB02'),MAX_BYTES=20*1024**3,MAX_FILES=100000;
+const MAGIC=Buffer.from('QIANXIB02'),LEGACY_MAGIC=Buffer.from(['FA','CET','B02'].join('')),TAG_BYTES=32,MAX_BYTES=20*1024**3,MAX_FILES=100000;
 const OMIT=new Set(['cache','code cache','gpucache','dawncache','dawngraphitecache','dawnwebgpucache','shadercache','grshadercache','cookies','cookies-journal','cookies-wal','cookies-shm','lock','singletonlock','singletoncookie','singletonsocket','login data','login data-journal','extension state','local extension settings','sync extension settings','extension rules','extension scripts','extensions']);
 function safeEntry(value){if(typeof value!=='string'||value.length>2048||value.includes('\\')||value.startsWith('/')||/[\x00-\x1f:]/.test(value)||value.split('/').some(x=>!x||x==='.'||x==='..'||/[. ]$/.test(x)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(x)))throw Error('备份包含不安全的文件路径');return value;}
 function excluded(relative){return relative.split('/').some(x=>OMIT.has(x.toLowerCase())||/^chrome-extension[_:]/i.test(x));}
@@ -33,13 +33,14 @@ async function writeArchive(destination,metadata,profiles){
  }finally{meta.fill(0);if(!committed)fs.rmSync(temp,{force:true});}
 }
 async function readArchive(file,root){
- const stat=fs.statSync(file);if(stat.size<61||stat.size>MAX_BYTES)throw Error('备份文件大小无效或超过 20GB');
- const fd=fs.openSync(file,'r'),head=Buffer.alloc(8),tag=Buffer.alloc(32);try{fs.readSync(fd,head,0,8,0);fs.readSync(fd,tag,0,32,stat.size-32);}finally{fs.closeSync(fd);}
- if(!head.equals(MAGIC))throw Error('不是受支持的千禧accounts实例备份');
+ const stat=fs.statSync(file);if(stat.size<MAGIC.length+TAG_BYTES+20||stat.size>MAX_BYTES)throw Error('备份文件大小无效或超过 20GB');
+ const fd=fs.openSync(file,'r'),head=Buffer.alloc(MAGIC.length),tag=Buffer.alloc(TAG_BYTES);try{fs.readSync(fd,head,0,head.length,0);fs.readSync(fd,tag,0,TAG_BYTES,stat.size-TAG_BYTES);}finally{fs.closeSync(fd);}
+ // 版本前缀长度必须按实际 magic 计算：9 字节 magic 用固定 8 字节偏移会把版本号当成压缩数据。
+ const magic=head.equals(MAGIC)?MAGIC:(head.subarray(0,LEGACY_MAGIC.length).equals(LEGACY_MAGIC)?LEGACY_MAGIC:null);if(!magic)throw Error('不是受支持的千禧accounts实例备份');
  fs.mkdirSync(root,{recursive:false,mode:0o700});const packed=path.join(root,'checked.payload');
- const hash=crypto.createHash('sha256').update(MAGIC),checksum=new Transform({transform(chunk,enc,cb){hash.update(chunk);cb(null,chunk);}});
+ const hash=crypto.createHash('sha256').update(magic),checksum=new Transform({transform(chunk,enc,cb){hash.update(chunk);cb(null,chunk);}});
  try{
-  await pipeline(fs.createReadStream(file,{start:8,end:stat.size-33}),checksum,fs.createWriteStream(packed,{flags:'wx',mode:0o600}));
+  await pipeline(fs.createReadStream(file,{start:magic.length,end:stat.size-TAG_BYTES-1}),checksum,fs.createWriteStream(packed,{flags:'wx',mode:0o600}));
   if(!crypto.timingSafeEqual(hash.digest(),tag))throw Error('备份文件损坏，未导入任何实例');
   const plain=path.join(root,'contents.payload');let inflated=0;
   const guard=new (require('node:stream').Transform)({transform(chunk,enc,cb){inflated+=chunk.length;cb(inflated>MAX_BYTES+32*1024**2?Error('备份解压后超过 20GB'):null,chunk);}});

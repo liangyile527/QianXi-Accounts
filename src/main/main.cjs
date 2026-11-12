@@ -9,6 +9,8 @@ app.setPath('userData',userDataPath(app));
 const controlApiModule=require('./control-api.cjs');
 const controlConfigFile=path.join(app.getPath('userData'),'control-api.json');
 let controlSettings=controlApiModule.loadSettings(controlConfigFile);
+// 扩展反复加载会产生大量完全相同的 ExtensionLoadWarning，先去重再接管输出。
+require('./process-warnings.cjs').installWarningDedup(process);
 require('./runtime-output.cjs').installRuntimeOutput(app);
 const appIcon=require('./window-identity.cjs').installWindowIdentity(app);
 require('./webrtc-policy.cjs').installWebRTCPolicy(app);

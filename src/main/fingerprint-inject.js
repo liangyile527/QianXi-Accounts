@@ -1,7 +1,8 @@
 // Adapted from the read-only fingerprint reference. Optional main-world patches; not complete hardware emulation.
 (function () {
-  if (window.__arenaFingerprintV3Applied) return;
-  window.__arenaFingerprintV3Applied = true;
+  var appliedKey = Symbol.for('qianxi.fp.applied');
+  if (window[appliedKey]) return;
+  Object.defineProperty(window, appliedKey, { value: true, configurable: true });
 
   var fp = /*__QIANXI_FP_PAYLOAD__*/null;
   if (!fp || typeof fp !== 'object') return;
@@ -168,6 +169,30 @@
       Range.prototype.getBoundingClientRect = markNative(function () {
         return cloneRect(originalRangeRect.apply(this, arguments));
       }, originalRangeRect);
+    }
+  } catch (e) {}
+  if (fp.Rects) try {
+    if (window.Range && Range.prototype.getClientRects) {
+      var originalRangeRects = Range.prototype.getClientRects;
+      Range.prototype.getClientRects = markNative(function () {
+        var list = originalRangeRects.apply(this, arguments);
+        if (!list || !list.length) return list;
+        var result = [];
+        for (var i = 0; i < list.length; i++) result.push(cloneRect(list[i]));
+        return result;
+      }, originalRangeRects);
+    }
+  } catch (e) {}
+  if (fp.Rects) try {
+    if (Element.prototype.getClientRects) {
+      var originalElementRects = Element.prototype.getClientRects;
+      Element.prototype.getClientRects = markNative(function () {
+        var list = originalElementRects.apply(this, arguments);
+        if (!list || !list.length) return list;
+        var result = [];
+        for (var i = 0; i < list.length; i++) result.push(cloneRect(list[i]));
+        return result;
+      }, originalElementRects);
     }
   } catch (e) {}
 

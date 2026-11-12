@@ -65,8 +65,9 @@ class ExtensionHost{
   this.onDebuggerDetach=(_event,reason)=>{const worker=this.debuggerWorker;this.debuggerAttached=false;this.debuggerNetwork=false;this.debuggerOwner=null;this.debuggerWorker=null;if(worker&&!worker.isDestroyed())try{worker.send('qianxi:extension-debugger-event',{type:'detach',source:{tabId:this.runtime.view?.webContents?.id},reason});}catch{}};
   runtime.view.webContents.debugger.on('message',this.onDebuggerMessage);
   runtime.view.webContents.debugger.on('detach',this.onDebuggerDetach);
-  this.onContext=(_event,params)=>{const menu=this.buildMenu(params);if(menu){this.lastMenu=menu;menu.popup({window:controller.window,callback:()=>{if(this.lastMenu===menu)this.lastMenu=null;}});}};
-  runtime.view.webContents.on('context-menu',this.onContext);
+  // 网页右键菜单统一由 page-tools 构建：扩展项通过 menuItems() 追加在内置项之后，
+  // 这里不再自己挂 context-menu，避免同一页面弹出两个原生菜单。
+  this.onContext=null;
   this.compat=new (require('./extension-compat.cjs').ExtensionCompat)(this);
  }
  debuggerTarget(target){
@@ -98,15 +99,20 @@ class ExtensionHost{
   if(method==='Network.disable'){this.debuggerNetwork=false;return require('./network-capture.cjs').releaseNetwork(wc);}
   const result=await wc.debugger.sendCommand(method,params);if(method==='Network.enable')this.debuggerNetwork=true;return result;
  }
- buildMenu(params){
+ menuItems(params,wc){
+  if(this.closed||!wc||wc.isDestroyed())return [];
   const template=[];
   for(const [id,entry]of this.menus){const rows=[...entry.items.values()];const children=parent=>rows.filter(row=>parent===undefined?row.parentId===undefined:String(row.parentId)===String(parent)).filter(row=>row.parentId===undefined?applies(row,params):row.visible!==false).map(row=>{
-   const submenu=children(row.id),item={id:id+':'+row.id,type:row.type||'normal',label:(row.title||'').replace(/%s/g,(params.selectionText||'').slice(0,80)),enabled:row.enabled!==false,checked:!!row.checked};if(submenu.length)item.submenu=submenu;else if(item.type!=='separator')item.click=clicked=>this.click(id,row.id,params,clicked);return item;
+   const submenu=children(row.id),item={id:id+':'+row.id,type:row.type||'normal',label:(row.title||'').replace(/%s/g,(params.selectionText||'').slice(0,80)),enabled:row.enabled!==false,checked:!!row.checked};if(submenu.length)item.submenu=submenu;else if(item.type!=='separator')item.click=clicked=>this.click(id,row.id,params,clicked,wc);return item;
   });template.push(...children(undefined));}
-  if(!template.length)return null;template.push({type:'separator'},{role:'copy'},{role:'paste'},{role:'selectAll'});return Menu.buildFromTemplate(template);
+  return template;
  }
- async click(id,menuItemId,params,clicked){
-  try{if(this.closed||this.runtime.status!=='running')return;const entry=this.menus.get(id),wc=this.runtime.view.webContents,extension=this.runtime.session.extensions.getExtension(id);if(!entry||!extension)return;
+ buildMenu(params,wc=this.runtime.view?.webContents){
+  const items=this.menuItems(params,wc);
+  if(!items.length)return null;items.push({type:'separator'},{role:'copy'},{role:'paste'},{role:'selectAll'});return Menu.buildFromTemplate(items);
+ }
+ async click(id,menuItemId,params,clicked,wc=this.runtime.view.webContents){
+  try{if(this.closed||this.runtime.status!=='running')return;const entry=this.menus.get(id),extension=this.runtime.session.extensions.getExtension(id);if(!entry||!extension||!wc||wc.isDestroyed())return;
    let recipient=extension.manifest.background?.service_worker?entry.worker:entry.wc;
    if((!recipient||recipient.isDestroyed())&&extension.manifest.background?.service_worker)recipient=await this.runtime.session.serviceWorkers.startWorkerForScope('chrome-extension://'+id+'/');if(!recipient||recipient.isDestroyed()||this.closed||this.runtime.status!=='running')return;
    const tab={id:wc.id,url:wc.getURL(),title:wc.getTitle(),windowId:this.controller.window.id,active:true,incognito:false};
@@ -115,6 +121,6 @@ class ExtensionHost{
    recipient.send('qianxi:extension-menu-click',info,tab);
   }catch(error){this.controller.log(this.instanceId,'扩展菜单执行失败：'+require('./workspace.cjs').redact(error.message),'WARN');}
  }
- close(){if(this.closed)return;this.closed=true;this.compat?.close();this.lastMenu?.closePopup();this.lastMenu=null;this.runtime.view?.webContents.removeListener('context-menu',this.onContext);this.runtime.view?.webContents.debugger.removeListener('message',this.onDebuggerMessage);this.runtime.view?.webContents.debugger.removeListener('detach',this.onDebuggerDetach);this.runtime.session.serviceWorkers.removeListener('running-status-changed',this.onWorker);for(const worker of this.workers)if(!worker.isDestroyed())worker.ipc.removeHandler(channel);for(const id of this.preloads)this.runtime.session.unregisterPreloadScript(id);this.menus.clear();this.debuggerOwner=null;this.debuggerWorker=null;this.debuggerAttached=false;hosts.delete(this.runtime.session);}
+ close(){if(this.closed)return;this.closed=true;this.compat?.close();this.lastMenu=null;this.runtime.view?.webContents.debugger.removeListener('message',this.onDebuggerMessage);this.runtime.view?.webContents.debugger.removeListener('detach',this.onDebuggerDetach);this.runtime.session.serviceWorkers.removeListener('running-status-changed',this.onWorker);for(const worker of this.workers)if(!worker.isDestroyed())worker.ipc.removeHandler(channel);for(const id of this.preloads)this.runtime.session.unregisterPreloadScript(id);this.menus.clear();this.debuggerOwner=null;this.debuggerWorker=null;this.debuggerAttached=false;hosts.delete(this.runtime.session);}
 }
 module.exports={ExtensionHost,properties,applies,pattern};
